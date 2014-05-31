@@ -21,7 +21,6 @@
 
 (use 'clojure.pprint)
 
-
 (def fz (bpmn/context  "resources/Valid Ticket.bpmn"))
 
 (pprint fz)
