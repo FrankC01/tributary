@@ -26,13 +26,6 @@
     (if (= (:stype _h) :bpmn) (bpmn/context _h) (xpdl/context _h))
     ))
 
-(use 'clojure.pprint)
-
-
-
-
-
-
 
 
 
