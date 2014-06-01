@@ -4,10 +4,13 @@
             [clojure.data.zip.xml :as zx])
   )
 
+;; Bindings
+(def ^:dynamic ^:private *zip* nil)
+(def ^:dynamic ^:private *prefix* nil)
+
 (defn context
   [parse-block]
-  (let [zip (:zip parse-block)]
+  (binding [*zip* (:zip parse-block) *prefix* (:ns parse-block)]
     (throw (Exception. "XPDL not supported at this time"))
     #_(conj (data-context zip) (process-context zip))
-    )
-  )
+    ))
