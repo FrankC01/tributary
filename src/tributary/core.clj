@@ -1,6 +1,8 @@
 (ns tributary.core
   (:require [tributary.tribpers :refer :all]
+            [tributary.utils :as tu]
             [tributary.bpmn :as bpmn]
+            [tributary.xpdl :as xpdl]
             )
   )
 
@@ -18,11 +20,20 @@
   {:pre [(fn? function-reference)]}
   (alter-var-root #'*default-persist-fetch* (constantly function-reference)))
 
+(defn context-from-source
+  [source-input]
+  (let [_h (tu/parse-source source-input)]
+    (if (= (:stype _h) :bpmn) (bpmn/context _h) (xpdl/context _h))
+    ))
 
 (use 'clojure.pprint)
 
-(def fz (bpmn/context  "resources/Valid Ticket.bpmn"))
 
-(pprint fz)
+
+
+
+
+
+
 
 

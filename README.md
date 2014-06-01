@@ -6,6 +6,8 @@ A Clojure library to work with XPDL/BPMN.
 
 Intent is to support developers that require processing of business processes articulated in XPDL/BPMN resources.
 
+First thoughts are to establish a context by which analyzers and execution may occur or at least advance the notion.
+
 ## Usage
 
 A bit to early to give any definitive usage direction. This is an experiment for me around developing 'something' open source.
