@@ -1,6 +1,8 @@
 (ns tributary.bpmn
   (:require [clojure.zip :as zip]
+            [tributary.utils :as tu]
             [clojure.xml :as xml]
+            [clojure.set :as set]
             [clojure.data.zip.xml :as zx])
   )
 
@@ -11,6 +13,7 @@
 ;; Utility
 
 (defn- pf
+  "Forms fully qualified keyword considering xmlns prefix"
   [kw]
   (keyword (str *prefix* kw)))
 
@@ -19,49 +22,42 @@
   (let [_x (clojure.string/split node #":")]
     (assoc {} :lang (_x 0) :ref (_x 1))))
 
-(defn- -?
-  [pred form1 form2]
-  (if pred form1 form2))
-
 ;; Data setup
 
-(defn- dataset-def
-  [ls-items]
-  (for [_x ls-items
-        :let [_xn (:attrs (zip/node _x))
-              _y (conj (select-keys _xn [:id])
-                   (dtype (:structureRef _xn)))]]
-    _y))
+(def ^:private data-attrs [:itemSubjectRef :name :isCollection])
 
-(defn- dataset-objdef
-  [ls-items]
-  (for [_x ls-items
-        :let [_xn (:attrs (zip/node _x))
-              _y   {:id (:itemSubjectRef _xn)
-                    :name (:name _xn)
-                    :data-objectref-id (:id _xn)
-                    :collection (symbol (:isCollection _xn))}]]
-    _y))
+(defn- data-name
+  "Takes a data id and pulls name and collection indicator"
+  [data-id root namekw]
+  (set/rename-keys
+   (select-keys
+    (:attrs (zip/node (zx/xml1-> root (pf namekw) (zx/attr= (first data-attrs) data-id))))
+    data-attrs) {(first data-attrs) :id}))
 
-(defn- dataset-inpdef
-  [ls-items]
-  (for [_x ls-items
-        :let [_xn (:attrs (zip/node _x))
-              _y (assoc {}
-                   :id (:itemSubjectRef _xn)
-                   :data-inputref-id (:id _xn))]]
-   _y))
+
+(defn- data-iospec
+  "root can be process or task. Takes the result of :ioSpecifiction 'iospec' zip node
+  then uses the :itemSubjectRef as :id filter for completing the definition"
+  [root namekw]
+  (let [_di (zx/xml-> root  (pf :ioSpecification) (pf :dataInput))]
+    (mapv #(data-name ((first data-attrs) (:attrs (zip/node %))) root namekw) _di)))
+
+(defn- data-type
+  "Takes the current data map, uses ID to search for type information"
+  [data-map root typekw]
+  (let [_x (:structureRef (:attrs (zip/node (zx/xml1-> root (pf typekw) (zx/attr= :id (:id data-map))))))]
+    (conj data-map (dtype _x))))
+
+(defn- global-data
+  "Pulls global process definitions"
+  []
+  (mapv #(data-type %  *zip* :itemDefinition)
+        (data-iospec (zx/xml1-> *zip* (pf :process)) :dataObject)))
 
 (defn- data-context
   "Develop the data reference context details"
   []
-  (let [dd   (dataset-def (zx/xml-> *zip* (pf :itemDefinition) ))
-        dod  (dataset-objdef (zx/xml-> *zip* (pf :process)
-                                             (pf :dataObject)))
-        did   (dataset-inpdef (zx/xml-> *zip* (pf :process)
-                                        (pf :ioSpecification)
-                                        (pf :dataInput)))]
-    (assoc {} :datarefs (into [] (map merge dd dod did)))))
+  (assoc {} :process-data (global-data)))
 
 ;; Process setup
 ; Each lane in the laneset represents a flow
@@ -88,11 +84,11 @@
   (let [_n (zip/node seq-item)
         _s (first (filter #(= (:sourceRef (:attrs _n)) (:id %)) s-defs))
         _t (first (filter #(= (:targetRef (:attrs _n)) (:id %)) s-defs))
-        _c (-? (nil? (:content _n)) [] (into [] (map seq-condition (:content _n))))
+        _c (if (nil? (:content _n)) [] (into [] (map seq-condition (:content _n))))
         _f (zx/xml-> *zip* (pf :process) (pf :sequenceFlow)
                              (zx/attr= :sourceRef (:id _t)))]
     (assoc _s :condition _c
-      :step (-? (empty? _f) [_t] (into [] (map #(seq-ast % s-defs) _f))))))
+      :step (if (empty? _f) [_t] (into [] (map #(seq-ast % s-defs) _f))))))
 
 (defn- lane-seq
   "Builds the sequence of steps"
@@ -126,3 +122,8 @@
   (binding [*zip* (:zip parse-block) *prefix* (:ns parse-block)]
     (conj (data-context) (process-context))))
 
+(use 'clojure.pprint)
+
+(def _s0 (tu/parse-source "resources/Valid Ticket-LD.bpmn"))
+(def _t0 (context _s0))
+(pprint (:process-data _t0))

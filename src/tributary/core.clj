@@ -23,10 +23,13 @@
 (defn context-from-source
   [source-input]
   (let [_h (tu/parse-source source-input)]
-    (if (= (:stype _h) :bpmn) (bpmn/context _h) (xpdl/context _h))
-    ))
+    (if (= (:stype _h) :bpmn) (bpmn/context _h) (xpdl/context _h))))
+
+(def t0 (context-from-source "resources/Valid Ticket-LD.bpmn"))
 
 
 
 
 
+(use 'clojure.pprint)
+(pprint t0)

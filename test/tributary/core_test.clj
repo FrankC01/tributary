@@ -20,7 +20,7 @@
 (deftest a-test
   (testing "general Valid Ticket counts"
     (are [cntxt kw c] (= (count (kw cntxt)) c)
-         t0 :datarefs 3
+         t0 :process-data 3
          t0 :processes 1)
     ))
 
