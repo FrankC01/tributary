@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bonitaConnector="http://www.bonitasoft.org/studio/connector/definition/6.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di_1="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://jcp.org/en/jsr/detail?id=270" xmlns:model="http://www.omg.org/spec/BPMN/20100524/MODEL" xsi:schemaLocation="schemaLocation http://www.omg.org/spec/BPMN/20100524/MODEL schemas/BPMN20.xsd" exporter="BonitaSoft" exporterVersion="6.3.0" expressionLanguage="http://groovy.codehaus.org/" targetNamespace="http://bonitasoft.com/_W5DR0OJ3EeOci8HYVGbbUA">
+  <model:collaboration id="_W5DR0OJ3EeOci8HYVGbbUA">
+    <model:participant id="_dlkbYO1zEeOupvzuFoPadg" name="Lane Pool" processRef="_W9CZ8OJ3EeOci8HYVGbbUA"/>
+    <model:participant id="_XCapMOJ3EeOci8HYVGbbUA" name="Employee actor">
+      <model:documentation>This is an example of actor that is mapped to any ACME users</model:documentation>
+    </model:participant>
+  </model:collaboration>
+  <model:process id="_W9CZ8OJ3EeOci8HYVGbbUA" name="Lane Pool">
+    <model:ioSpecification id="_dlrJEO1zEeOupvzuFoPadg">
+      <model:dataInput id="_dlrwIO1zEeOupvzuFoPadg" itemSubjectRef="_eO2lAOWIEeOUVteQEvBH2g"/>
+      <model:dataInput id="_dltlU-1zEeOupvzuFoPadg" itemSubjectRef="_f6fncOWIEeOUVteQEvBH2g"/>
+      <model:dataInput id="_dltlWe1zEeOupvzuFoPadg" itemSubjectRef="_h7J3oOWIEeOUVteQEvBH2g"/>
+      <model:inputSet id="_dlrwIe1zEeOupvzuFoPadg">
+        <model:dataInputRefs>_dlrwIO1zEeOupvzuFoPadg</model:dataInputRefs>
+      </model:inputSet>
+      <model:inputSet id="_dltlVO1zEeOupvzuFoPadg">
+        <model:dataInputRefs>_dltlU-1zEeOupvzuFoPadg</model:dataInputRefs>
+      </model:inputSet>
+      <model:inputSet id="_dltlWu1zEeOupvzuFoPadg">
+        <model:dataInputRefs>_dltlWe1zEeOupvzuFoPadg</model:dataInputRefs>
+      </model:inputSet>
+      <model:outputSet id="_dluMYO1zEeOupvzuFoPadg"/>
+    </model:ioSpecification>
+    <model:laneSet id="Lane Pool_laneSet">
+      <model:lane id="_XCeTkOJ3EeOci8HYVGbbUA" name="Ticket Filing">
+        <model:flowNodeRef>_XFOFkOJ3EeOci8HYVGbbUA</model:flowNodeRef>
+        <model:flowNodeRef>_kx8ekOWIEeOUVteQEvBH2g</model:flowNodeRef>
+        <model:flowNodeRef>_tzk3IOWIEeOUVteQEvBH2g</model:flowNodeRef>
+        <model:flowNodeRef>_3Zx8YOWIEeOUVteQEvBH2g</model:flowNodeRef>
+        <model:flowNodeRef>_hozt8OWJEeOUVteQEvBH2g</model:flowNodeRef>
+        <model:flowNodeRef>_3MRTYOo_EeOU9KdEDw89fg</model:flowNodeRef>
+      </model:lane>
+    </model:laneSet>
+    <model:dataObject id="DataObject_dlqiAO1zEeOupvzuFoPadg_eO2lAOWIEeOUVteQEvBH2g" name="preapproved" isCollection="false" itemSubjectRef="_eO2lAOWIEeOUVteQEvBH2g"/>
+    <model:dataObject id="DataObject_dltlUu1zEeOupvzuFoPadg_f6fncOWIEeOUVteQEvBH2g" name="name" isCollection="false" itemSubjectRef="_f6fncOWIEeOUVteQEvBH2g"/>
+    <model:dataObject id="DataObject_dltlWO1zEeOupvzuFoPadg_h7J3oOWIEeOUVteQEvBH2g" name="date" isCollection="false" itemSubjectRef="_h7J3oOWIEeOUVteQEvBH2g"/>
+    <model:startEvent id="_XFOFkOJ3EeOci8HYVGbbUA" name="Start Validate"/>
+    <model:userTask id="_kx8ekOWIEeOUVteQEvBH2g" name="File It">
+      <model:ioSpecification id="_dmGm4O1zEeOupvzuFoPadg">
+        <model:dataInput id="_dmGm4e1zEeOupvzuFoPadg" itemSubjectRef="_xFxysOnxEeOuJJ86upuOlA"/>
+        <model:inputSet id="_dmGm4u1zEeOupvzuFoPadg">
+          <model:dataInputRefs>_dmGm4e1zEeOupvzuFoPadg</model:dataInputRefs>
+        </model:inputSet>
+      </model:ioSpecification>
+      <model:dataInputAssociation id="_dmGm4-1zEeOupvzuFoPadg">
+        <model:targetRef>_dmGm4e1zEeOupvzuFoPadg</model:targetRef>
+        <model:assignment>
+          <model:from xsi:type="model:tFormalExpression" id="_dmGm5e1zEeOupvzuFoPadg" evaluatesToTypeRef="java:java.util.Date">new java.util.Date()</model:from>
+          <model:to xsi:type="model:tFormalExpression" id="_dmGm5O1zEeOupvzuFoPadg">_dmGm4e1zEeOupvzuFoPadg</model:to>
+        </model:assignment>
+      </model:dataInputAssociation>
+    </model:userTask>
+    <model:dataObject id="DataObject_dmF_0O1zEeOupvzuFoPadg_xFxysOnxEeOuJJ86upuOlA" name="fileDate" isCollection="false" itemSubjectRef="_xFxysOnxEeOuJJ86upuOlA">
+      <model:documentation>The date the ticket was filed</model:documentation>
+    </model:dataObject>
+    <model:endEvent id="_tzk3IOWIEeOUVteQEvBH2g" name="Terminate end event1">
+      <model:terminateEventDefinition id="_dmHN8O1zEeOupvzuFoPadg"/>
+    </model:endEvent>
+    <model:exclusiveGateway id="_3Zx8YOWIEeOUVteQEvBH2g" name="Valid Ticket" default="_pCHTQOWIEeOUVteQEvBH2g"/>
+    <model:endEvent id="_hozt8OWJEeOUVteQEvBH2g" name="Terminate end event2">
+      <model:terminateEventDefinition id="_dmIcEe1zEeOupvzuFoPadg"/>
+    </model:endEvent>
+    <model:userTask id="_3MRTYOo_EeOU9KdEDw89fg" name="Approve It">
+      <model:ioSpecification id="_dmIcFO1zEeOupvzuFoPadg">
+        <model:dataInput id="_dmIcFe1zEeOupvzuFoPadg" itemSubjectRef="_2YZRQO1yEeOupvzuFoPadg"/>
+        <model:inputSet id="_dmIcFu1zEeOupvzuFoPadg">
+          <model:dataInputRefs>_dmIcFe1zEeOupvzuFoPadg</model:dataInputRefs>
+        </model:inputSet>
+      </model:ioSpecification>
+      <model:property id="_dmIcE-1zEeOupvzuFoPadg" itemSubjectRef="_2YZRQO1yEeOupvzuFoPadg" name="t1"/>
+    </model:userTask>
+    <model:sequenceFlow id="_X9waYOWIEeOUVteQEvBH2g" name="" sourceRef="_XFOFkOJ3EeOci8HYVGbbUA" targetRef="_3Zx8YOWIEeOUVteQEvBH2g">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_dmJDIO1zEeOupvzuFoPadg" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath"></model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_pCHTQOWIEeOUVteQEvBH2g" name="Yes" sourceRef="_3Zx8YOWIEeOUVteQEvBH2g" targetRef="_kx8ekOWIEeOUVteQEvBH2g">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_dmXsoO1zEeOupvzuFoPadg" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath">preapproved == true</model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_tzySgOWIEeOUVteQEvBH2g" name="No" sourceRef="_3Zx8YOWIEeOUVteQEvBH2g" targetRef="_3MRTYOo_EeOU9KdEDw89fg">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_dmYTsO1zEeOupvzuFoPadg" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath">preapproved == false</model:conditionExpression>
+    </model:sequenceFlow>
+    <model:sequenceFlow id="_ho4mcOWJEeOUVteQEvBH2g" name="" sourceRef="_kx8ekOWIEeOUVteQEvBH2g" targetRef="_hozt8OWJEeOUVteQEvBH2g"/>
+    <model:sequenceFlow id="_3NRY8Oo_EeOU9KdEDw89fg" name="" sourceRef="_3MRTYOo_EeOU9KdEDw89fg" targetRef="_tzk3IOWIEeOUVteQEvBH2g"/>
+    <model:sequenceFlow id="_mftaAOpAEeOU9KdEDw89fg" name="file" sourceRef="_3MRTYOo_EeOU9KdEDw89fg" targetRef="_kx8ekOWIEeOUVteQEvBH2g">
+      <model:conditionExpression xsi:type="model:tFormalExpression" id="_dmYTse1zEeOupvzuFoPadg" evaluatesToTypeRef="java:java.lang.Boolean" language="http://www.w3.org/1999/XPath"></model:conditionExpression>
+    </model:sequenceFlow>
+  </model:process>
+  <model:itemDefinition id="_eO2lAOWIEeOUVteQEvBH2g" structureRef="java:java.lang.Boolean"/>
+  <model:itemDefinition id="_f6fncOWIEeOUVteQEvBH2g" structureRef="java:java.lang.String"/>
+  <model:itemDefinition id="_h7J3oOWIEeOUVteQEvBH2g" structureRef="java:java.util.Date"/>
+  <model:itemDefinition id="_xFxysOnxEeOuJJ86upuOlA" structureRef="java:java.util.Date">
+    <model:documentation>The date the ticket was filed</model:documentation>
+  </model:itemDefinition>
+  <model:itemDefinition id="_2YZRQO1yEeOupvzuFoPadg" structureRef="java:java.lang.Integer">
+    <model:documentation>transient test field</model:documentation>
+  </model:itemDefinition>
+  <di:BPMNDiagram name="Valid Ticket">
+    <di:BPMNPlane id="plane__W5DR0OJ3EeOci8HYVGbbUA" bpmnElement="_W5DR0OJ3EeOci8HYVGbbUA">
+      <di:BPMNShape id="_XAJ_YOJ3EeOci8HYVGbbUA" bpmnElement="_W9CZ8OJ3EeOci8HYVGbbUA" isHorizontal="true">
+        <dc:Bounds height="419.0" width="1290.0" x="30.0" y="30.0"/>
+        <di:BPMNLabel id="_dloFwe1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_XCgv0OJ3EeOci8HYVGbbUA" bpmnElement="_XCeTkOJ3EeOci8HYVGbbUA" isHorizontal="true">
+        <dc:Bounds height="419.0" width="1272.0" x="48.0" y="30.0"/>
+        <di:BPMNLabel id="_dluzcO1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_XFP6wOJ3EeOci8HYVGbbUA" bpmnElement="_XFOFkOJ3EeOci8HYVGbbUA">
+        <dc:Bounds height="30.0" width="30.0" x="108.0" y="140.0"/>
+        <di:BPMNLabel id="_dl06EO1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_kyAwAOWIEeOUVteQEvBH2g" bpmnElement="_kx8ekOWIEeOUVteQEvBH2g">
+        <dc:Bounds height="50.0" width="100.0" x="420.0" y="140.0"/>
+        <di:BPMNLabel id="_dmGm5u1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_tznTYOWIEeOUVteQEvBH2g" bpmnElement="_tzk3IOWIEeOUVteQEvBH2g">
+        <dc:Bounds height="30.0" width="30.0" x="277.0" y="350.0"/>
+        <di:BPMNLabel id="_dmHN8e1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_3ZyjcOWIEeOUVteQEvBH2g" bpmnElement="_3Zx8YOWIEeOUVteQEvBH2g">
+        <dc:Bounds height="43.0" width="43.0" x="270.0" y="133.0"/>
+        <di:BPMNLabel id="_dmIcEO1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_ho1jIOWJEeOUVteQEvBH2g" bpmnElement="_hozt8OWJEeOUVteQEvBH2g">
+        <dc:Bounds height="30.0" width="30.0" x="616.0" y="150.0"/>
+        <di:BPMNLabel id="_dmIcEu1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNShape id="_3MxpsOo_EeOU9KdEDw89fg" bpmnElement="_3MRTYOo_EeOU9KdEDw89fg">
+        <dc:Bounds height="50.0" width="100.0" x="264.0" y="237.0"/>
+        <di:BPMNLabel id="_dmIcF-1zEeOupvzuFoPadg" labelStyle="_dloFwO1zEeOupvzuFoPadg"/>
+      </di:BPMNShape>
+      <di:BPMNEdge id="_X9y2oOWIEeOUVteQEvBH2g" bpmnElement="_X9waYOWIEeOUVteQEvBH2g">
+        <di_1:waypoint x="138.0" y="155.0"/>
+        <di_1:waypoint x="270.0" y="155.0"/>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_pCJvgOWIEeOUVteQEvBH2g" bpmnElement="_pCHTQOWIEeOUVteQEvBH2g">
+        <di_1:waypoint x="307.0" y="160.0"/>
+        <di_1:waypoint x="420.0" y="160.0"/>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_t0SBwOWIEeOUVteQEvBH2g" bpmnElement="_tzySgOWIEeOUVteQEvBH2g">
+        <di_1:waypoint x="302.0" y="165.0"/>
+        <di_1:waypoint x="302.0" y="237.0"/>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_ho5NgOWJEeOUVteQEvBH2g" bpmnElement="_ho4mcOWJEeOUVteQEvBH2g">
+        <di_1:waypoint x="520.0" y="165.0"/>
+        <di_1:waypoint x="616.0" y="165.0"/>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_3NXfkOo_EeOU9KdEDw89fg" bpmnElement="_3NRY8Oo_EeOU9KdEDw89fg">
+        <di_1:waypoint x="303.0" y="287.0"/>
+        <di_1:waypoint x="303.0" y="355.0"/>
+      </di:BPMNEdge>
+      <di:BPMNEdge id="_mfuoIOpAEeOU9KdEDw89fg" bpmnElement="_mftaAOpAEeOU9KdEDw89fg">
+        <di_1:waypoint x="364.0" y="269.0"/>
+        <di_1:waypoint x="465.0" y="269.0"/>
+        <di_1:waypoint x="465.0" y="190.0"/>
+      </di:BPMNEdge>
+    </di:BPMNPlane>
+    <di:BPMNLabelStyle id="_dloFwO1zEeOupvzuFoPadg">
+      <dc:Font isBold="false" isItalic="false" isStrikeThrough="false" isUnderline="false" name="Lucida Grande" size="9.0"/>
+    </di:BPMNLabelStyle>
+  </di:BPMNDiagram>
+</model:definitions>
