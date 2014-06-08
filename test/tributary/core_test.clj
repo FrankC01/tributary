@@ -3,7 +3,7 @@
             [tributary.core :refer :all]))
 
 (defn one-time-setup []
-  (def t0 (context-from-source "resources/Valid TIcket.bpmn"))
+  (def t0 (context-from-source "resources/Valid TIcket-LD.bpmn"))
   (println "one time setup"))
 
 (defn one-time-teardown []
@@ -20,7 +20,6 @@
 (deftest a-test
   (testing "general Valid Ticket counts"
     (are [cntxt kw c] (= (count (kw cntxt)) c)
-         t0 :process-data 3
          t0 :processes 1)
     ))
 

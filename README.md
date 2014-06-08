@@ -8,28 +8,38 @@ Intent is to support developers that require processing of business processes ar
 
 First thoughts are to establish a context by which analyzers and execution may occur or at least advance the notion.
 
-## Usage
+## Roadmap
+
+| Release | Descritpion |
+| -------: | :----------- |
+| 0.1.2-SNAPSHOT   | BPMN Parse (rich type handling) |
+| 0.1.1-SNAPSHOT (Current) | BPMN Parse (limited type handling) |
+| 0.1.0-SNAPSHOT   | Initial Setup |
+
+
+## Usage 0.1.1-SNAPSHOT
 Be warned, the current state will be turbulent whilst I hone the skills!
 
 Assuming you've cloned and installed tributary:
-1. Add the dependency to your project.clj
+
+___Add the dependency to your project.clj___
 ````clojure
-:dependencies [[tributary "0.1.0-SNAPSHOT"]
+:dependencies [[tributary "0.1.1-SNAPSHOT"]
   ...]
 ````
-2. Add to namespace
+___Add to namespace___
 ````clojure
 (ns tributary.bpmn
   (:require [tributary.core :as trib]
     ...)
   )
 ````
-3. Parse source and generate a context
+___Parse source and generate a context___
 ````clojure
-(def t0 (trib/context-from-source "resources/Valid TIcket.bpmn"))
+(def t0 (trib/context-from-source "resources/Valid TIcket-LD.bpmn"))
 ````
 
-### Context
+### Context (BPMN) 0.1.1-SNAPSHOT
 
 A context is a nested map structure that represents key aspects of the parse source. Currently, tributary generates two main sections:
 ````clojure
@@ -39,78 +49,68 @@ A context is a nested map structure that represents key aspects of the parse sou
 => (use 'clojure.pprint)
 nil
 
-=> (def t0 (context-from-source "resources/Valid Ticket.bpmn"))
+=> (def t0 (context-from-source "resources/Valid Ticket-LD.bpmn"))
 #'t0
 
 => (pprint (keys t0))
-(:processes :datarefs)
+(:processes)
 
 ````
-#### :datarefs
-... is a vector of maps where each map is a data definition. Currently, the bpmn procesesor only ferets out the globally defined. The following are examples from the "Valid Ticket" bpmn resource:
+***Anatomy*** - The folliwng is a brief description of the data content of `processes`
 
+The context returned by tributary is collection of one or more processes as defined in the BPMN.
 ````clojure
-=> (pprint (:datarefs t0))
-[{:data-inputref-id "_-dsIQOcuEeOCUsvrzncABg",
-  :collection false,
-  :data-objectref-id
-  "DataObject_-dq6IOcuEeOCUsvrzncABg_eO2lAOWIEeOUVteQEvBH2g",
-  :name "preapproved",
-  :lang "java",
-  :ref "java.lang.Boolean",
-  :id "_eO2lAOWIEeOUVteQEvBH2g"}
- {:data-inputref-id "_-dt9c-cuEeOCUsvrzncABg",
-  :collection false,
-  :data-objectref-id
-  "DataObject_-dt9cucuEeOCUsvrzncABg_f6fncOWIEeOUVteQEvBH2g",
-  :name "name",
-  :lang "java",
-  :ref "java.lang.String",
-  :id "_f6fncOWIEeOUVteQEvBH2g"}
- {:data-inputref-id "_-dt9eecuEeOCUsvrzncABg",
-  :collection false,
-  :data-objectref-id
-  "DataObject_-dt9eOcuEeOCUsvrzncABg_h7J3oOWIEeOUVteQEvBH2g",
-  :name "date",
-  :lang "java",
-  :ref "java.util.Date",
-  :id "_h7J3oOWIEeOUVteQEvBH2g"}]
+; The context contains a vector of one or more business process definitions
+{:processes [...]}
+
+; Each process definition
+{:name            "Acme Customer Care",
+  :id             "_W9CZ8OJ3EeOci8HYVGbbUA",
+  :process-data   [...],
+  :flowsets       [[...] [...]]}
+
+; :process-data is a vector of the process global data declarations, for example:
+
+{:name         "preapproved",
+  :id          "_eO2lAOWIEeOUVteQEvBH2g",
+  :refid       "_hwtesO46EeOoCOm4Voc-mg",
+  :lang        "java",
+  :ref         "java.lang.Boolean",
+  :isCollection false}
+
+; :flowsets are a vector of vectors. Each inner vector contains:
+
+(pprint (ffirst (:flowsets (first (:processes t0)))))
+
+{:name     "File Ticket",
+  :id      "_XCeTkOJ3EeOci8HYVGbbUA",
+  :nodes   [...]}
+
+; :nodes is an unordered vector of maps (node). Each node describes a execution node (task, gateways, events, etc.)
+
+ [{:name       "Start Validate",
+   :id         "_XFOFkOJ3EeOci8HYVGbbUA",
+   :type       :startEvent}
+  {:name       "Store Ticket",
+   :id         "_kx8ekOWIEeOUVteQEvBH2g",
+   :type       :userTask,
+   :execution  [...],
+   :data       [...]}
+   {...}]
+
+; :data is a vector that contains local data declarations to the node,
+
+  [{:name         "fileDate",
+    :id           "_xFxysOnxEeOuJJ86upuOlA",
+    :refid        "_hxLYwu46EeOoCOm4Voc-mg",
+    :lang         "java",
+    :ref          "java.util.Date",
+    :isCollection false}],
+
 ````
 
-#### :processes
-... is a vector of maps where each map corresponds to a 'flow' (*lane* in bpmn). A flow contains a tree of 'steps'.
-The following are examples from the "Valid Ticket" bpmn lane:
+### Context (XPDL - TBD but will borrow heavily from BPMN)
 
-````clojure
-=> (pprint (:processes t0))
-[{:flow
-  {:step
-   [{:step
-     [{:step [{:name "Terminate end event2",
-               :spec-type :endEvent,
-               :id "_hozt8OWJEeOUVteQEvBH2g"}],
-       :condition [],
-       :name "File It",
-       :spec-type :userTask,
-       :id "_kx8ekOWIEeOUVteQEvBH2g"}],
-     :condition [{:expression ["preapproved == true"], :ref "java.lang.Boolean", :lang "java"}],
-     :name "Valid Ticket",
-     :spec-type :exclusiveGateway,
-     :id "_3Zx8YOWIEeOUVteQEvBH2g"}
-    {:step [{:name "Terminate end event1",
-             :spec-type :endEvent,
-             :id "_tzk3IOWIEeOUVteQEvBH2g"}],
-     :condition [{:expression ["preapproved == false"], :ref "java.lang.Boolean", :lang "java"}],
-     :name "Valid Ticket",
-     :spec-type :exclusiveGateway,
-     :id "_3Zx8YOWIEeOUVteQEvBH2g"}],
-   :condition [{:expression :any, :ref "java.lang.Boolean", :lang "java"}],
-   :name "Start Validate",
-   :spec-type :startEvent,
-   :id "_XFOFkOJ3EeOci8HYVGbbUA"},
-  :name "Ticket Filing",
-  :id "_XCeTkOJ3EeOci8HYVGbbUA"}]
-````
 
 ## License
 

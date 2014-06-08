@@ -31,24 +31,26 @@
 (def ^:private data-attrs [:itemSubjectRef :name :isCollection])
 
 (defn- data-name
-  "Takes a data id and pulls name and collection indicator"
-  [data-id root namekw]
-  (update-in
-   (set/rename-keys
-    (conj {:isCollection "false"}
-         (select-keys
-          (:attrs
-           (zip/node
-            (zx/xml1-> root (pf namekw) (zx/attr= (first data-attrs) data-id))))
-          data-attrs))
-    {(first data-attrs) :id}) [:isCollection] symbol))
+  "Takes a data id and pulls name and collection indicator for both locally
+  (e.g. :property or globally :dataObject)."
+  [data-id root specroot]
+  (let [_dg  (zx/xml1-> root (pf :dataObject) (zx/attr= :itemSubjectRef data-id))
+        _do  (if (nil? _dg)
+               (zx/xml1-> specroot (pf :property) (zx/attr= :itemSubjectRef data-id))
+               _dg)]
+    (update-in
+     (set/rename-keys
+      (conj {:isCollection "false"} (select-keys (:attrs (zip/node _do)) data-attrs))
+      {:itemSubjectRef :id}) [:isCollection] symbol)))
 
 (defn- data-iospec
   "root can be process or task. Takes the result of :ioSpecifiction 'iospec' zip node
   then uses the :itemSubjectRef as :id filter for completing the definition"
-  [specroot root namekw]
+  [specroot root]
   (let [_di (zx/xml-> specroot  (pf :ioSpecification) (pf :dataInput))]
-    (mapv #(data-name ((first data-attrs) (:attrs (zip/node %))) root namekw) _di)))
+    (mapv #(assoc (data-name (:itemSubjectRef (:attrs (zip/node %))) root specroot)
+             :refid (:id (:attrs (zip/node %))))
+          _di)))
 
 (defn- data-type
   "Takes the current data map, uses ID to search for type information"
@@ -60,18 +62,8 @@
   "Pulls global process definitions"
   [pnode]
   (mapv #(data-type %  *zip* :itemDefinition)
-        (data-iospec pnode pnode :dataObject)))
+        (data-iospec pnode pnode)))
 
-(defn- task-data
-  "Task data may be global or locally defined.
-  If locally defined, it does not have type information"
-  [tnode proot]
-  (let [_ids (mapv #(assoc {} :id (:itemSubjectRef (:attrs (zip/node %))))
-              (zx/xml-> tnode (pf :ioSpecification) (pf :dataInput)))
-        _dts (mapv #(data-type  % *zip* :itemDefinition) _ids)
-        ;_dts (mapv #(assoc {} :id %) _ids)
-        ]
-    _dts))
 
 ;; Process setup
 ; Each lane in the laneset represents a flow
@@ -115,12 +107,20 @@
                                   (pf :sequenceFlow)
                                   (zx/attr= :sourceRef (:id _s))) _o))))
 
+(defn- task-definition
+  "Task data may be global or locally defined.
+  If locally defined, it does not have type information"
+  [tnode proot]
+  (let [_dts   (mapv #(data-type %  *zip* :itemDefinition) (data-iospec tnode proot))
+        ]
+   (assoc {} :data _dts :execution [])))
+
 (defn- finish-node
   [node node-type proot]
   (condp = node-type
     :startEvent       nil
-    :task             (assoc {} :data (task-data node proot))
-    :userTask         (assoc {} :data (task-data node proot))
+    :task             (task-definition node proot)
+    :userTask         (task-definition node proot)
     :exclusiveGateway nil
     :endEvent         nil
     ))
@@ -139,7 +139,9 @@
   (let [_fr (:attrs (zip/node flowref))
         _ct (map #(assoc {} :id (:id (:attrs %)) :type (:tag %)) (zip/children proot))
         _fn (map zx/text (zx/xml-> flowref (pf :flowNodeRef)))
-        _fd (assoc-in _fr [:nodes] (mapv #(node-def % proot _ct) _fn))
+        _nd (mapv #(node-def % proot _ct) _fn)
+        _sn (first (filter #(= (:type %) :startEvent) _nd))
+        _fd (assoc-in _fr [:nodes] _nd)
         ]
     _fd)
   )
@@ -154,7 +156,8 @@
   (let [_pn (assoc-in (:attrs (zip/node proot)) [:process-data]
                       (global-data proot))
         _pn (assoc-in _pn [:flowsets] (mapv #(flowset-def % proot)
-                                           (zx/xml-> proot (pf :laneSet))))]
+                                           (zx/xml-> proot (pf :laneSet))))
+        ]
     _pn))
 
 (defn- process-context
@@ -166,8 +169,10 @@
   (binding [*zip* (:zip parse-block) *prefix* (:ns parse-block)]
     (process-context)))
 
-(use 'clojure.pprint)
+(comment
+  (use 'clojure.pprint)
+  (def _s0 (tu/parse-source "resources/Valid Ticket-LD.bpmn"))
+  (def _t0 (context _s0))
+  (pprint _t0)
+  )
 
-(def _s0 (tu/parse-source "resources/Valid Ticket-LD.bpmn"))
-(def _t0 (context _s0))
-(pprint _t0)
