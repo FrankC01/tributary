@@ -12,9 +12,12 @@ First thoughts are to establish a context by which analyzers and execution may o
 
 | Release | Descritpion |
 | -------: | :----------- |
-| 0.1.2-SNAPSHOT   | BPMN Parse (rich type handling) |
 | 0.1.1-SNAPSHOT (Current) | BPMN Parse (limited type handling) |
-| 0.1.0-SNAPSHOT   | Initial Setup |
+| 0.1.2-SNAPSHOT   | BPMN Parse (rich type handling), expect refactoring |
+| 0.1.3-SNAPSHOT   | XPDL initial foray, expect refactoring |
+| 0.1.4-SNAPSHOT   | XPDL Parse (limited type handling), expect refactoring |
+| 0.1.5-SNAPSHOT   | XPDL Parse (rich type handling), expect refactoring |
+| 0.2.0            | First Release - added richness, zipper? features |
 
 
 ## Usage 0.1.1-SNAPSHOT
