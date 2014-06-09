@@ -26,6 +26,16 @@
       3 (assoc {} :lang (_x 1) :ref (_x 2))
      )))
 
+(defn node-for-id
+  "Returns first node matching node-id in nodes collection"
+  [node-id nodes]
+  (first (filter #(= (:id %) node-id) nodes)))
+
+(defn nodes-for-type
+  "Returns lazy-sequence of nodes that match the node-type"
+  [node-type nodes]
+  (filter #(= (:type %) node-type) nodes))
+
 ;; Data setup
 
 (def ^:private data-attrs [:itemSubjectRef :name :isCollection])
@@ -59,7 +69,7 @@
     (conj data-map (dtype _x))))
 
 (defn- global-data
-  "Pulls global process definitions"
+  "Pulls global data definitions"
   [pnode]
   (mapv #(data-type %  *zip* :itemDefinition)
         (data-iospec pnode pnode)))
@@ -68,52 +78,19 @@
 ;; Process setup
 ; Each lane in the laneset represents a flow
 
-(defn- seq-def
-  "General purpose lane flow type information"
-  [flows content]
-  (for [_t flows
-        :let [_y (first (filter #(= (get-in % [:attrs :id]) _t)content))
-              _x (assoc {} :id _t
-                   :spec-type (keyword (:ref (dtype(name (:tag _y)))))
-                   :name (get-in _y [:attrs :name]))]]
-    _x))
-
-(defn- seq-condition
-  "Sets up the conditional expression, typically for a gateway"
-  [node]
-  (conj (dtype (:evaluatesToTypeRef (:attrs node)))
-        {:expression (or (:content node) :any)}))
-
-(defn- seq-ast
-  "seq-ast recurses through the steps and branches of a flow"
-  [seq-item s-defs]
-  (let [_n (zip/node seq-item)
-        _s (first (filter #(= (:sourceRef (:attrs _n)) (:id %)) s-defs))
-        _t (first (filter #(= (:targetRef (:attrs _n)) (:id %)) s-defs))
-        _c (if (nil? (:content _n)) [] (into [] (map seq-condition (:content _n))))
-        _f (zx/xml-> *zip* (pf :process) (pf :sequenceFlow)
-                             (zx/attr= :sourceRef (:id _t)))]
-    (assoc _s :condition _c
-      :step (if (empty? _f) [_t] (into [] (map #(seq-ast % s-defs) _f))))))
-
-(defn- lane-seq
-  "Builds the sequence of steps"
-  [node header]
-  (let [_n  (into [] (map #(first (:content %)) (:content node)))
-        _o  (into [] (seq-def _n (zip/children (first (zx/xml-> *zip* (pf :process))))))
-        _s  (first (filter #(= (:spec-type %) :startEvent) _o))]
-    (assoc-in header [:flow]
-              (seq-ast (zx/xml1-> *zip* (pf :process)
-                                  (pf :sequenceFlow)
-                                  (zx/attr= :sourceRef (:id _s))) _o))))
+(defn- task-data-binding
+  "Returns to and from data bindings in task"
+  [input-assoc]
+  (assoc {}
+    :to-data-refid (zx/xml1-> input-assoc (pf :targetRef) zx/text)
+    :from (zx/xml1-> input-assoc (pf :assignment) (pf :from) zx/text)))
 
 (defn- task-definition
-  "Task data may be global or locally defined.
-  If locally defined, it does not have type information"
+  "Returns map for tasks local data declarations and data bindings"
   [tnode proot]
-  (let [_dts   (mapv #(data-type %  *zip* :itemDefinition) (data-iospec tnode proot))
-        ]
-   (assoc {} :data _dts :execution [])))
+  (assoc {}
+    :data (mapv #(data-type %  *zip* :itemDefinition) (data-iospec tnode proot))
+    :bindings (mapv task-data-binding (zx/xml-> tnode (pf :dataInputAssociation)))))
 
 (defn- finish-node
   [node node-type proot]
@@ -134,17 +111,46 @@
         ]
     (conj _a (finish-node _n (:type _a) proot))))
 
+(declare step-def)
+
+(defn- step-ref
+  [sqref proot nodes]
+  (let [_sqnode  (zip/node sqref)
+        _idsmap  (set/rename-keys
+                  (select-keys (:attrs _sqnode) [:sourceRef :targetRef :name])
+                  {:sourceRef :node :targetRef :next})
+        _stptype  (select-keys (node-for-id (:node _idsmap) nodes) [:type])
+        _conddref (zx/xml1-> sqref (pf :conditionExpression) zx/text)
+        _conds    {:predicates
+                   [(cond (or (nil? _conddref) (= _conddref "")) :none
+                          :else _conddref)]}]
+    (conj _idsmap _stptype _conds {:next (step-def (:next _idsmap) proot nodes) })))
+
+(defn- step-def
+  [srcid proot nodes]
+  (let [_sx (zx/xml-> proot (pf :sequenceFlow) (zx/attr= :sourceRef srcid))
+        _sd (if (empty? _sx)
+              [(conj (select-keys (node-for-id srcid nodes) [:type])
+                     {:name ""
+                      :node srcid
+                      :next []
+                      :predicates [:none]
+                      })]
+              (mapv #(step-ref % proot nodes) _sx))
+        ]
+    _sd))
+
 (defn- flow-def
   [flowref proot]
   (let [_fr (:attrs (zip/node flowref))
         _ct (map #(assoc {} :id (:id (:attrs %)) :type (:tag %)) (zip/children proot))
         _fn (map zx/text (zx/xml-> flowref (pf :flowNodeRef)))
         _nd (mapv #(node-def % proot _ct) _fn)
-        _sn (first (filter #(= (:type %) :startEvent) _nd))
-        _fd (assoc-in _fr [:nodes] _nd)
+        _sn (step-def (:id (first (filter #(= (:type %) :startEvent) _nd))) proot _nd)
+        _fd (assoc-in _fr [:nodes] _nd )
+        _fd (assoc-in _fd [:steps] _sn )
         ]
-    _fd)
-  )
+    _fd))
 
 (defn- flowset-def
   [flow-set proot]
@@ -165,14 +171,17 @@
   (assoc {} :processes (mapv #(process-def %) (zx/xml-> *zip* (pf :process)))))
 
 (defn context
+  "Takes a parse block and returns one or more process contexts"
   [parse-block]
   (binding [*zip* (:zip parse-block) *prefix* (:ns parse-block)]
     (process-context)))
+
 
 (comment
   (use 'clojure.pprint)
   (def _s0 (tu/parse-source "resources/Valid Ticket-LD.bpmn"))
   (def _t0 (context _s0))
   (pprint _t0)
+  (keys (ffirst (:flowsets (first (:processes _t0)))))
   )
 

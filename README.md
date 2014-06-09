@@ -41,10 +41,29 @@ ___Parse source and generate a context___
 
 ### Context (BPMN) 0.1.1-SNAPSHOT
 
-A context is a nested map structure that represents key aspects of the parse source. Currently, tributary generates two main sections:
+The following describes the support and resulting output form from parsing a BPMN resource.
+
+#### Supported BPMN statements
+| Statement Type | Supported inner types and/or (Comments) | Since Version |
+| -------------- | :-------- | :------------: |
+| :definitions   | :process, :itemDefinition (see :process-data and :data below) | 0.1.1 |
+| :process       | :ioSpecification, :dataObject, :laneSet, :startEvent, :userTask, :task, :exclusiveGateway, :endEvent :sequenceFlow |  0.1.1 |
+| :ioSpecification | (see :process-data and :data below) |  0.1.1 |
+| :dataObject | used in constructing data definitions |  0.1.1 |
+| :laneSet | :lane |  0.1.1 |
+| :lane | :flowNodeRef (used in constructing node definitions) |  0.1.1 |
+| :startEvent | (see :nodes below) |  0.1.1 |
+| :endEvent | (see :nodes below) |  0.1.1 |
+| :userTask | (see :nodes, :data and :bindings below) |  0.1.1 |
+| :task | (see :nodes, :data and :bindings below) |  0.1.1 |
+| :exclusiveGateway | (see :nodes below) |  0.1.1 |
+| :sequenceFlow | (see :steps and :predicates below ) |  0.1.1 |
+
+
+A context is result of parsing the source BPMN.
 ````clojure
-; A context is a nested map structure that represents key aspects of the parse source.
-; Currently, tributary has two main associations to vectors:
+; A context contains is a nested map structure that represents key aspects of the parse source.
+; Currently, tributary returns a process map for each process parsed from the source
 
 => (use 'clojure.pprint)
 nil
@@ -58,9 +77,8 @@ nil
 ````
 ***Anatomy*** - The folliwng is a brief description of the data content of `processes`
 
-The context returned by tributary is collection of one or more processes as defined in the BPMN.
 ````clojure
-; The context contains a vector of one or more business process definitions
+; The context contains an unordered vector of one or more business process definitions
 {:processes [...]}
 
 ; Each process definition
@@ -69,14 +87,15 @@ The context returned by tributary is collection of one or more processes as defi
   :process-data   [...],
   :flowsets       [[...] [...]]}
 
-; :process-data is a vector of the process global data declarations, for example:
+; :process-data is an unordered vector of the process scope data declarations, for example:
 
-{:name         "preapproved",
+[{:name         "preapproved",
   :id          "_eO2lAOWIEeOUVteQEvBH2g",
   :refid       "_hwtesO46EeOoCOm4Voc-mg",
   :lang        "java",
   :ref         "java.lang.Boolean",
-  :isCollection false}
+  :isCollection false},
+  {...}]
 
 ; :flowsets are a vector of vectors. Each inner vector contains:
 
@@ -84,9 +103,10 @@ The context returned by tributary is collection of one or more processes as defi
 
 {:name     "File Ticket",
   :id      "_XCeTkOJ3EeOci8HYVGbbUA",
-  :nodes   [...]}
+  :nodes   [...],
+  :steps   [...]}
 
-; :nodes is an unordered vector of maps (node). Each node describes a execution node (task, gateways, events, etc.)
+; :nodes is an unordered vector of node declarations. Each node describes an execution node (task, gateways, events, etc.)
 
  [{:name       "Start Validate",
    :id         "_XFOFkOJ3EeOci8HYVGbbUA",
@@ -94,19 +114,34 @@ The context returned by tributary is collection of one or more processes as defi
   {:name       "Store Ticket",
    :id         "_kx8ekOWIEeOUVteQEvBH2g",
    :type       :userTask,
-   :execution  [...],
-   :data       [...]}
+   :data       [...],
+   :bindings   [...]}
    {...}]
 
-; :data is a vector that contains local data declarations to the node,
+; :data (for :task and :userTask types only) is an unordered vector of node local data declarations
 
   [{:name         "fileDate",
     :id           "_xFxysOnxEeOuJJ86upuOlA",
     :refid        "_hxLYwu46EeOoCOm4Voc-mg",
     :lang         "java",
     :ref          "java.util.Date",
-    :isCollection false}],
+    :isCollection false},
+    {...}]
 
+; :bindings (for :task and :userTask types only) is an unordered vector of node local data assignment expressions
+
+  [{:from          "new java.util.Date()",     ; Expression
+    :to-data-refid "_hxLYwu46EeOoCOm4Voc-mg"}, ; Results to data refid (see :data above)
+    {...}]
+
+; :steps is a vector containing a tree defining the sequence of steps
+[{:name       "Yes"                      ; If path is named
+  :predicates ["preapproved == true"],   ; Expressions determining if step can execute. :none indicates unconditional execution
+  :node       "_XFOFkOJ3EeOci8HYVGbbUA", ; id of node being referenced
+  :type       :exclusiveGateway,         ; Referenced node type
+  :next       [...]                      ; Next step if evaluation of predicate allows
+  },
+  {...}]
 ````
 
 ### Context (XPDL - TBD but will borrow heavily from BPMN)
