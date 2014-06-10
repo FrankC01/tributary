@@ -1,4 +1,6 @@
-(ns tributary.tribpers)
+(ns ^{:author "Frank V. Castellucci"
+      :doc "tributary noop functions"}
+  tributary.tribpers)
 
 (defn store
   "Default persist function"

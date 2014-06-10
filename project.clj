@@ -1,4 +1,4 @@
-(defproject tributary "0.1.1-SNAPSHOT"
+(defproject tributary "0.1.2-SNAPSHOT"
   :description "BPMN and XPDL parser and context generator"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"

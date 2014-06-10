@@ -1,4 +1,6 @@
-(ns tributary.xpdl
+(ns ^{:author "Frank V. Castellucci"
+      :doc "tributary XPDL parser functions"}
+  tributary.xpdl
   (:require [clojure.zip :as zip]
             [clojure.xml :as xml]
             [clojure.data.zip.xml :as zx])

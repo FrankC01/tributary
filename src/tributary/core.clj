@@ -1,4 +1,6 @@
-(ns tributary.core
+(ns ^{:author "Frank V. Castellucci"
+      :doc "tributary - Parse BPMN and XPDL resources"}
+  tributary.core
   (:require [tributary.tribpers :refer :all]
             [tributary.utils :as tu]
             [tributary.bpmn :as bpmn]

@@ -12,15 +12,15 @@ First thoughts are to establish a context by which analyzers and execution may o
 
 | Release | Descritpion |
 | -------: | :----------- |
-| 0.1.1-SNAPSHOT (Current) | BPMN Parse (limited type handling) |
-| 0.1.2-SNAPSHOT   | BPMN Parse (rich type handling), expect refactoring |
+| 0.1.1-SNAPSHOT (Complete) | BPMN Parse (limited type handling) |
+| 0.1.2-SNAPSHOT (Current)  | BPMN Parse (rich type handling), expect refactoring |
 | 0.1.3-SNAPSHOT   | XPDL initial foray, expect refactoring |
 | 0.1.4-SNAPSHOT   | XPDL Parse (limited type handling), expect refactoring |
 | 0.1.5-SNAPSHOT   | XPDL Parse (rich type handling), expect refactoring |
 | 0.2.0            | First Release - added richness, zipper? features |
 
 
-## Usage 0.1.1-SNAPSHOT
+## Usage 0.1.2-SNAPSHOT
 Be warned, the current state will be turbulent whilst I hone the skills!
 
 Assuming you've cloned and installed tributary:
@@ -42,15 +42,19 @@ ___Parse source and generate a context___
 (def t0 (trib/context-from-source "resources/Valid TIcket-LD.bpmn"))
 ````
 
-### Context (BPMN) 0.1.1-SNAPSHOT
+### Context (BPMN) 0.1.2-SNAPSHOT
 
 The following describes the support and resulting output form from parsing a BPMN resource.
 
 #### Supported BPMN statements
 | Statement Type | Supported inner types and/or (Comments) | Since Version |
 | -------------- | :-------- | :------------: |
-| :definitions   | :process, :itemDefinition (see :process-data and :data below) | 0.1.1 |
-| :process       | :ioSpecification, :dataObject, :laneSet, :startEvent, :userTask, :task, :exclusiveGateway, :endEvent :sequenceFlow |  0.1.1 |
+| :definitions   | :process, :itemDefinition, :resource, :message :interface | 0.1.2 |
+| :process       | :ioSpecification, :dataObject, :laneSet, :startEvent, :userTask, :scriptTask :sendTask :serviceTask :task, :exclusiveGateway, :endEvent :sequenceFlow |  0.1.2 |
+| :interface | (see :interfaces below) | 0.1.2 |
+| :resource | (see :resources below) | 0.1.2 |
+| :message | (see :messages below) | 0.1.2 |
+| :itemDefinition | (see :process-data and :data below)  |  0.1.1 |
 | :ioSpecification | (see :process-data and :data below) |  0.1.1 |
 | :dataObject | used in constructing data definitions |  0.1.1 |
 | :laneSet | :lane |  0.1.1 |
@@ -58,15 +62,20 @@ The following describes the support and resulting output form from parsing a BPM
 | :startEvent | (see :nodes below) |  0.1.1 |
 | :endEvent | (see :nodes below) |  0.1.1 |
 | :userTask | (see :nodes, :data and :bindings below) |  0.1.1 |
+| :scriptTask | | 0.1.2 |
+| :sendTask | | 0.1.2 |
+| :serviceTask | | 0.1.2 |
 | :task | (see :nodes, :data and :bindings below) |  0.1.1 |
+| :scriptTask | | 0.1.2 |
 | :exclusiveGateway | (see :nodes below) |  0.1.1 |
 | :sequenceFlow | (see :steps and :predicates below ) |  0.1.1 |
 
+### Data Model
 
-A context is result of parsing the source BPMN.
+The product of `context-from-source` is a nested associative structure (OK, a map) referred to as a *context*.
+
 ````clojure
 ; A context contains is a nested map structure that represents key aspects of the parse source.
-; Currently, tributary returns a process map for each process parsed from the source
 
 => (use 'clojure.pprint)
 nil
@@ -75,16 +84,47 @@ nil
 #'t0
 
 => (pprint (keys t0))
-(:processes)
+(:processes :resources :messages :interfaces)
 
 ````
-***Anatomy*** - The folliwng is a brief description of the data content of `processes`
+***Anatomy*** - The folliwng is a brief description of the data model
 
 ````clojure
-; The context contains an unordered vector of one or more business process definitions
-{:processes [...]}
 
-; Each process definition
+; context contains a number of root level vectors
+
+{:resources   [...],
+  :messages   [...],
+  :interfaces [...],
+  :processes  [...]
+  }
+
+; :resource example
+
+{:name "1st Level Support",
+  :id "FirstLevelSupportResource"}
+
+
+; :messages example
+
+{:name "addTicket Message",
+  :id "AddTicketMessage",
+  :itemRef "tns:TicketItem"}
+
+
+; :interface example
+
+{:name "Product Backlog Interface"
+  :implementation {:lang "java",
+                    :ref "com.camunda.examples.incidentmanagement.ProductBacklog"},
+  :operations [{:name "addTicketOperation",
+                :id "addTicketOperation",
+                :messages [{:msg-id "AddTicketMessage"}],
+                :implementationRef "addTicket"}]}
+
+
+; :process example
+
 {:name            "Acme Customer Care",
   :id             "_W9CZ8OJ3EeOci8HYVGbbUA",
   :process-data   [...],
@@ -95,6 +135,7 @@ nil
 [{:name         "preapproved",
   :id          "_eO2lAOWIEeOUVteQEvBH2g",
   :refid       "_hwtesO46EeOoCOm4Voc-mg",
+  :kind        "Information"               ; added in 0.1.2
   :lang        "java",
   :ref         "java.lang.Boolean",
   :isCollection false},

@@ -1,10 +1,13 @@
-(ns tributary.utils
+(ns ^{:author "Frank V. Castellucci"
+      :doc "tributary utility functions"}
+  tributary.utils
   (:require [clojure.zip :as zip]
             [clojure.xml :as xml])
   )
 
 
 (defn- xtype
+  "Hack to determine namespace (XPDL | BPMN)"
   [zip]
   (let [_h (clojure.string/split (name (:tag (first zip))) #":")
         _ns  (if (= (count _h) 1) nil (_h 0))
@@ -18,3 +21,15 @@
 (defn parse-source
   [input-source]
   (xtype (zip/xml-zip (xml/parse input-source))))
+
+(defn node-for-id
+  "Returns first node matching node-id in nodes collection"
+  [node-id nodes]
+  (first (filter #(= (:id %) node-id) nodes)))
+
+(defn nodes-for-type
+  "Returns lazy-sequence of nodes that match the node-type
+  in the nodes collection"
+  [node-type nodes]
+  (filter #(= (:type %) node-type) nodes))
+
