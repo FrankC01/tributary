@@ -211,8 +211,9 @@
 (defn- process-context
   "For each process, parse a process definition context"
   []
-  (let [_cntx (assoc {} :processes
-                (mapv #(process-def %) (zx/xml-> *zip* (pf :process))))
+  (let [_cntx (assoc {} :definition (:attrs (zip/node *zip*)))
+        _cntx (assoc-in _cntx [:processes]
+                        (mapv #(process-def %) (zx/xml-> *zip* (pf :process))))
         _cntx (assoc-in _cntx [:interfaces]
                         (mapv interface-def (zx/xml-> *zip* (pf :interface))))
         _cntx (assoc-in _cntx [:resources]
@@ -220,8 +221,10 @@
                               (zx/xml-> *zip* (pf :resource))))
         _cntx (assoc-in _cntx [:messages]
                         (mapv #(:attrs (zip/node %))
-                              (zx/xml-> *zip* (pf :message))))]
-    (assoc-in _cntx [:items] (mapv items (zx/xml-> *zip* (pf :itemDefinition))))))
+                              (zx/xml-> *zip* (pf :message))))
+        _cntx (assoc-in _cntx [:items]
+                        (mapv items (zx/xml-> *zip* (pf :itemDefinition))))]
+    _cntx))
 
 (defn context
   "Takes a parse block and returns process contexts"
@@ -230,12 +233,15 @@
             *prefix* (:ns parse-block)]
     (process-context)))
 
+
+
 ;--------------------------------------------
 (comment
   (use 'clojure.pprint)
   (def _s0 (tu/parse-source "resources/Incident Management.bpmn"))
   (def _t0 (context _s0))
 
+  (pprint (:definition _t0))
   (pprint (:items _t0))
   (pprint (:resources _t0))
   (pprint (:messages _t0))

@@ -27,7 +27,7 @@ Assuming you've cloned and installed tributary:
 
 ___Add the dependency to your project.clj___
 ````clojure
-:dependencies [[tributary "0.1.1-SNAPSHOT"]
+:dependencies [[tributary "0.1.2-SNAPSHOT"]
   ...]
 ````
 ___Add to namespace___
@@ -53,6 +53,7 @@ If it is not listed here, it is not yet supported...
 | BPMN Term | tributary term | Comment | Since |
 | :-------- | :------------- | :------ | -----:|
 | definitions | context | the result of parsing BPMN xml | 0.1.1 |
+| definitions | :definition | attribute map of definitions xml statement | 0.1.2 |
 | itemDefinition | :items | collection on context | 0.1.2 |
 | message  | :messages | collection on context | 0.1.2 |
 | resource | :resources | collection on context | 0.1.2 |
@@ -79,21 +80,36 @@ nil
 => (def t0 (context-from-source "resources/Incident Management.bpmn))
 #'t0
 
+=> (pprint (:definition t0))
+{:targetNamespace "http://fox.camunda.com/model/98a0678d9e194de9b3d9284886c3",
+ :name "Incident Management",
+ :typeLanguage "http://jcp.org/en/jsr/detail?id=270",
+ :expressionLanguage "http://www.jcp.org/en/jsr/detail?id=245",
+ :xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance",
+ :xmlns "http://www.omg.org/spec/BPMN/20100524/MODEL",
+ :xmlns:dc "http://www.omg.org/spec/DD/20100524/DC",
+ :xmlns:tns "http://fox.camunda.com/model/98a0678d9e194de9b3d9284886c3",
+ :xmlns:java "http://jcp.org/en/jsr/detail?id=270",
+ :id "_98a0678d9e194de9b3d9284886c3",
+ :xmlns:di "http://www.omg.org/spec/DD/20100524/DI",
+ :xmlns:bpmndi "http://www.omg.org/spec/BPMN/20100524/DI"}
+
 => (pprint (keys t0))
-(:items :messages :resources :interfaces :processes)
+(:definition :items :messages :resources :interfaces :processes)
 
 ````
 ***Anatomy*** - Each of the highlevel and deeper level maps demonstrated
 
 ````clojure
 
-; context contains a number of root level vectors
+; context contains a number of root level vectors typically of map(s)
 
-{:items       [...],
-  :messages   [...],
-  :resources  [...],
-  :interfaces [...],
-  :processes  [...]
+{:definition  {...}
+  :items      [{...} {...}]
+  :messages   [{...} {...}]
+  :resources  [{...} {...}]
+  :interfaces [{...} {...}]
+  :processes  [{...} {...}]
   }
 
 ; :items
