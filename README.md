@@ -1,6 +1,6 @@
 # tributary
 
-A Clojure library to work with XPDL/BPMN.
+A Clojure library for parsing BPMN and/or XPDL.
 
 ## Objective
 
@@ -12,7 +12,7 @@ First thoughts are to establish a context by which analyzers and execution may o
 
 | Release | Descritpion |
 | -------: | :----------- |
-| 0.1.1-SNAPSHOT (Complete) | BPMN Parse (limited type handling) |
+| ~~0.1.1-SNAPSHOT (Complete)~~ | ~~BPMN Parse (limited type handling)~~ |
 | 0.1.2-SNAPSHOT (Current)  | BPMN Parse (rich type handling), expect refactoring |
 | 0.1.3-SNAPSHOT   | XPDL initial foray, expect refactoring |
 | 0.1.4-SNAPSHOT   | XPDL Parse (limited type handling), expect refactoring |
@@ -39,138 +39,132 @@ ___Add to namespace___
 ````
 ___Parse source and generate a context___
 ````clojure
-(def t0 (trib/context-from-source "resources/Valid TIcket-LD.bpmn"))
+(def t0 (trib/context-from-source "resources/Incident Management.bpmn"))
 ````
 
-### Context (BPMN) 0.1.2-SNAPSHOT
+### Description (BPMN) 0.1.2-SNAPSHOT
 
-The following describes the support and resulting output form from parsing a BPMN resource.
+The data model has changed significantly in 0.1.2. The following descripes the mapping
+and support for BPMN for this project version:
 
-#### Supported BPMN statements
-| Statement Type | Supported inner types and/or (Comments) | Since Version |
-| -------------- | :-------- | :------------: |
-| :definitions   | :process, :itemDefinition, :resource, :message :interface | 0.1.2 |
-| :process       | :ioSpecification, :dataObject, :laneSet, :startEvent, :userTask, :scriptTask :sendTask :serviceTask :task, :exclusiveGateway, :endEvent :sequenceFlow |  0.1.2 |
-| :interface | (see :interfaces below) | 0.1.2 |
-| :resource | (see :resources below) | 0.1.2 |
-| :message | (see :messages below) | 0.1.2 |
-| :itemDefinition | (see :process-data and :data below)  |  0.1.1 |
-| :ioSpecification | (see :process-data and :data below) |  0.1.1 |
-| :dataObject | used in constructing data definitions |  0.1.1 |
-| :laneSet | :lane |  0.1.1 |
-| :lane | :flowNodeRef (used in constructing node definitions) |  0.1.1 |
-| :startEvent | (see :nodes below) |  0.1.1 |
-| :endEvent | (see :nodes below) |  0.1.1 |
-| :userTask | (see :nodes, :data and :bindings below) |  0.1.1 |
-| :scriptTask | | 0.1.2 |
-| :sendTask | | 0.1.2 |
-| :serviceTask | | 0.1.2 |
-| :task | (see :nodes, :data and :bindings below) |  0.1.1 |
-| :scriptTask | | 0.1.2 |
-| :exclusiveGateway | (see :nodes below) |  0.1.1 |
-| :sequenceFlow | (see :steps and :predicates below ) |  0.1.1 |
+#### BPMN support and mapping
+If it is not listed here, it is not yet supported...
 
-### Data Model
+| BPMN Term | tributary term | Comment | Since |
+| :-------- | :------------- | :------ | -----:|
+| definitions | context | the result of parsing BPMN xml | 0.1.1 |
+| itemDefinition | :items | collection on context | 0.1.2 |
+| message  | :messages | collection on context | 0.1.2 |
+| resource | :resources | collection on context | 0.1.2 |
+| interface | :interfaces | collection on context | 0.1.2 |
+| process   | :processes  | colleciton on context | 0.1.2 |
+| ioSpecification, dataInput, dataOutput | :process-data | collection process level data on individual of :processes | 0.1.2 |
+| startEvent, endEvent, task, userTask, scriptTask, sendTask, serviceTask, exclusiveGateway | :process-nodes | collection of process type references on individual of :processes | 0.1.2 |
+| laneSet   | :process-flow-refs | collection on individual of :processes | 0.1.2 |
+| lane      | :flow-refs | collection on individual of :process-flow-refs | 0.1.2 |
+| flowNodeRef | :node-refs | collection on individual of :flow-refs | 0.1.2 |
+| ioSpecification, dataInput, dataOutput | :data | collection on individual of :process-nodes | 0.1.2 |
+| ioSpecification, dataInputAssociation, dataOutputAssociation | :bindings | collection on individual of :process-nodes | 0.1.2 |
 
-The product of `context-from-source` is a nested associative structure (OK, a map) referred to as a *context*.
+### Context Data Model
+
+The context forms the data DSL for consumption and is the product of `context-from-source` execution.
 
 ````clojure
-; A context contains is a nested map structure that represents key aspects of the parse source.
+; context examples using Incident Management.bpmn
 
 => (use 'clojure.pprint)
 nil
 
-=> (def t0 (context-from-source "resources/Valid Ticket-LD.bpmn"))
+=> (def t0 (context-from-source "resources/Incident Management.bpmn))
 #'t0
 
 => (pprint (keys t0))
-(:processes :resources :messages :interfaces)
+(:items :messages :resources :interfaces :processes)
 
 ````
-***Anatomy*** - The folliwng is a brief description of the data model
+***Anatomy*** - Each of the highlevel and deeper level maps demonstrated
 
 ````clojure
 
 ; context contains a number of root level vectors
 
-{:resources   [...],
+{:items       [...],
   :messages   [...],
+  :resources  [...],
   :interfaces [...],
   :processes  [...]
   }
 
-; :resource example
+; :items
 
-{:name "1st Level Support",
-  :id "FirstLevelSupportResource"}
+[{:id "IssueItem",
+  :structureRef {:ref "com.camunda.examples.incidentmanagement.IssueReport", :ns nil},
+  :itemKind "Information",
+  :isCollection false}
+ {...}]
 
+; :resources
 
-; :messages example
+[{:name "1st Level Support", :id "FirstLevelSupportResource"},
+ {...}]
 
-{:name "addTicket Message",
-  :id "AddTicketMessage",
-  :itemRef "tns:TicketItem"}
+; :messages
 
+[{:name "addTicket Message", :id "AddTicketMessage", :itemRef "tns:TicketItem"},
+ {...}]
 
-; :interface example
+; :interface example, note the nested array of operations and messages
 
-{:name "Product Backlog Interface"
-  :implementation {:lang "java",
-                    :ref "com.camunda.examples.incidentmanagement.ProductBacklog"},
+[{:name "Product Backlog Interface"
+  :implementation {:lang "java", :ref "com.camunda.examples.incidentmanagement.ProductBacklog"},
   :operations [{:name "addTicketOperation",
                 :id "addTicketOperation",
                 :messages [{:msg-id "AddTicketMessage"}],
-                :implementationRef "addTicket"}]}
-
-
-; :process example
-
-{:name            "Acme Customer Care",
-  :id             "_W9CZ8OJ3EeOci8HYVGbbUA",
-  :process-data   [...],
-  :flowsets       [[...] [...]]}
-
-; :process-data is an unordered vector of the process scope data declarations, for example:
-
-[{:name         "preapproved",
-  :id          "_eO2lAOWIEeOUVteQEvBH2g",
-  :refid       "_hwtesO46EeOoCOm4Voc-mg",
-  :kind        "Information"               ; added in 0.1.2
-  :lang        "java",
-  :ref         "java.lang.Boolean",
-  :isCollection false},
+                :implementationRef "addTicket"}]},
   {...}]
 
-; :flowsets are a vector of vectors. Each inner vector contains:
+; :processes is a vector of process contexts
 
-(pprint (ffirst (:flowsets (first (:processes t0)))))
+(pprint (first (:processes t0)))
 
-{:name     "File Ticket",
-  :id      "_XCeTkOJ3EeOci8HYVGbbUA",
-  :nodes   [...],
-  :steps   [...]}
+[{:id                   "WFP-1-1",
+  :isExecutable         "true",
+  :process-flow-refs    [...],
+  :process-nodes        [...],
+  :process-flows        [...],
+  :process-data         [...]},
+  {...}]
 
-; :nodes is an unordered vector of node declarations. Each node describes an execution node (task, gateways, events, etc.)
+; :process-flow-refs - summary of laneSet, lanes and flowNodeRefs
 
- [{:name       "Start Validate",
-   :id         "_XFOFkOJ3EeOci8HYVGbbUA",
-   :type       :startEvent}
-  {:name       "Store Ticket",
-   :id         "_kx8ekOWIEeOUVteQEvBH2g",
-   :type       :userTask,
-   :data       [...],
-   :bindings   [...]}
-   {...}]
+[{:id "ls_1-1"
+  :flow-refs [{:node-refs ["_1-13" "_1-26" "_1-77" "_1-128" "_1-150" "_1-201" "_1-376"],
+               :name "1st level support",
+               :partitionElementRef "tns:FirstLevelSupportResource",
+               :id "_1-9"}
+             {...}],
+  }]
 
-; :data (for :task and :userTask types only) is an unordered vector of node local data declarations
+; :process-nodes, an unordered vector of nodes (startEvent, task, etc.) assocated with process
 
-  [{:name         "fileDate",
-    :id           "_xFxysOnxEeOuJJ86upuOlA",
-    :refid        "_hxLYwu46EeOoCOm4Voc-mg",
-    :lang         "java",
-    :ref          "java.util.Date",
-    :isCollection false},
-    {...}]
+[{:id "_1-77",
+  :name "edit 1st level ticket",
+  :type :userTask,
+  :owner-resource ["FirstLevelSupportResource"],
+  :data [{:item-id {:ref "TicketItem", :ns "tns"},    ; reference into :process-data
+          :id "TicketDataOutputOf_1-77",              ; node data local identity
+          :reftype :output,                           ; used as :input or :output
+          :scope :task}                               ; scope as :task or :process
+          {:item-id {:ref "TicketItem", :ns "tns"},
+          :id "TicketDataInputOf_1-77",
+          :reftype :input,
+          :scope :task}],
+  :bindings [{:from nil,
+              :to-data-refid "TicketDataInputOf_1-77"}]
+  }
+  {...}]
+
 
 ; :bindings (for :task and :userTask types only) is an unordered vector of node local data assignment expressions
 
@@ -178,14 +172,74 @@ nil
     :to-data-refid "_hxLYwu46EeOoCOm4Voc-mg"}, ; Results to data refid (see :data above)
     {...}]
 
-; :steps is a vector containing a tree defining the sequence of steps
-[{:name       "Yes"                      ; If path is named
-  :predicates ["preapproved == true"],   ; Expressions determining if step can execute. :none indicates unconditional execution
-  :node       "_XFOFkOJ3EeOci8HYVGbbUA", ; id of node being referenced
-  :type       :exclusiveGateway,         ; Referenced node type
-  :next       [...]                      ; Next step if evaluation of predicate allows
-  },
-  {...}]
+; :process-flows is execution tree referenings the process-nodes
+; :predicates are expressions or :none, that gate execution of the step
+
+[{:predicates [:none],
+  :next
+  [{:predicates [:none],
+    :next
+    [{:predicates [:none],
+      :next
+      [{:predicates
+        [" ${getDataObject(\"TicketDataObject\").status == \"Open\"} "],
+        :arc-name "2nd level issue",
+        :next
+        [{:predicates [:none],
+          :next
+          [{:predicates
+            [" ${getDataObject(\"TicketDataObject\").status == \"Deferred\"} "],
+            :arc-name "Fix in Next release",
+            :next
+            [{:predicates [:none],
+              :next
+              [{:predicates [:none],
+                :next
+                [{:predicates [:none],
+                  :next
+                  [{:arc-name "",
+                    :node {:id "_1-376", :type :endEvent},
+                    :next [],
+                    :predicates [:none]}],
+                  :node {:type :scriptTask, :id "_1-201"}}],
+                :node {:type :sendTask, :id "_1-150"}}],
+              :node {:type :serviceTask, :id "_1-325"}}],
+            :node {:type :exclusiveGateway, :id "_1-303"}}
+           {:predicates
+            [" ${getDataObject(\"TicketDataObject\").status == \"Resolved\"} "],
+            :arc-name "Issue resolved",
+            :next
+            [{:predicates [:none],
+              :next
+              [{:predicates [:none],
+                :next
+                [{:arc-name "",
+                  :node {:id "_1-376", :type :endEvent},
+                  :next [],
+                  :predicates [:none]}],
+                :node {:type :scriptTask, :id "_1-201"}}],
+              :node {:type :sendTask, :id "_1-150"}}],
+            :node {:type :exclusiveGateway, :id "_1-303"}}],
+          :node {:type :userTask, :id "_1-252"}}],
+        :node {:type :exclusiveGateway, :id "_1-128"}}
+       {:predicates
+        [" ${getDataObject(\"TicketDataObject\").status == \"Resolved\"} "],
+        :arc-name "Issue resolved",
+        :next
+        [{:predicates [:none],
+          :next
+          [{:predicates [:none],
+            :next
+            [{:arc-name "",
+              :node {:id "_1-376", :type :endEvent},
+              :next [],
+              :predicates [:none]}],
+            :node {:type :scriptTask, :id "_1-201"}}],
+          :node {:type :sendTask, :id "_1-150"}}],
+        :node {:type :exclusiveGateway, :id "_1-128"}}],
+      :node {:type :userTask, :id "_1-77"}}],
+    :node {:type :scriptTask, :id "_1-26"}}],
+  :node {:type :startEvent, :id "_1-13"}}]
 ````
 
 ### Context (XPDL - TBD but will borrow heavily from BPMN)

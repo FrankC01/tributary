@@ -27,8 +27,18 @@
   (let [_h (tu/parse-source source-input)]
     (if (= (:stype _h) :bpmn) (bpmn/context _h) (xpdl/context _h))))
 
+
 (comment
-  (def t0 (context-from-source "resources/Valid Ticket-LD.bpmn"))
+  (def _t0 (context-from-source "resources/Incident Management.bpmn"))
   (use 'clojure.pprint)
-  (pprint t0)
+  (pprint (:items _t0))
+  (pprint (:resources _t0))
+  (pprint (:messages _t0))
+  (pprint (:interfaces _t0))
+  (pprint (:processes _t0))
+
+  (pprint (:process-flow-refs (first (:processes _t0))))
+  (pprint (:process-nodes (first (:processes _t0))))
+  (pprint (:process-flows (first (:processes _t0))))
+  (pprint (:process-data (first (:processes _t0))))
   )
