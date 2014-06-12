@@ -242,12 +242,6 @@
   (binding [*zip* (:zip parse-block)
             *prefix* (:ns parse-block)]
     (process-context)))
-  (use 'clojure.pprint)
-  (def _s0 (tu/parse-source "resources/Incident Management.bpmn"))
-  (def _t0 (context _s0))
-  (pprint (:process-data (first (:processes _t0))))
-  (pprint (:process-nodes (first (:processes _t0))))
-
 
 ;--------------------------------------------
 (comment
