@@ -59,15 +59,25 @@
   [input-assoc]
   (assoc {}
     :to-data-refid (zx/xml1-> input-assoc (pf :targetRef) zx/text)
-    :from (zx/xml1-> input-assoc (pf :assignment) (pf :from) zx/text)))
+    :from (zx/xml1-> input-assoc (pf :sourceRef) zx/text)))
+
+(defn- task-data-assignment
+  "Returns to and from data bindings in task."
+  [input-assoc]
+  (assoc {}
+    :to (zx/xml1-> input-assoc :to zx/text)
+    :from (zx/xml1-> input-assoc :from zx/text)))
 
 (defn- task-definition
   "Returns general map for tasks, data declarations and data bindings"
   [tnode proot]
-  (assoc {}
-    :owner-resource []
-    :data  (data-iospec tnode proot)
-    :bindings (mapv task-data-binding (zx/xml-> tnode (pf :dataInputAssociation)))))
+  (let [_di (zx/xml-> tnode (pf :dataInputAssociation))
+        _dia (zx/xml-> (first _di) (pf :assignment))]
+    (assoc {}
+      :owner-resource []
+      :data  (data-iospec tnode proot)
+      :bindings (mapv task-data-binding _di)
+      :assignment (mapv task-data-assignment _dia))))
 
 (defn- userTask-definition
   "Retreives potential owners (resources) of task"
@@ -99,8 +109,8 @@
     :task             (task-definition node proot)
     :userTask         (userTask-definition node proot)
     :scriptTask       (scriptTask-definition node proot)
-    :sendTask         nil
-    :serviceTask      nil
+    :sendTask         (task-definition node proot)
+    :serviceTask      (task-definition node proot)
     :exclusiveGateway nil
     :endEvent         nil
     (throw (Exception. (str "Invalid node-type " node-type)))
@@ -232,7 +242,11 @@
   (binding [*zip* (:zip parse-block)
             *prefix* (:ns parse-block)]
     (process-context)))
-
+  (use 'clojure.pprint)
+  (def _s0 (tu/parse-source "resources/Incident Management.bpmn"))
+  (def _t0 (context _s0))
+  (pprint (:process-data (first (:processes _t0))))
+  (pprint (:process-nodes (first (:processes _t0))))
 
 
 ;--------------------------------------------
