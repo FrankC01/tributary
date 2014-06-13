@@ -176,17 +176,22 @@ nil
           :id "TicketDataInputOf_1-77",
           :reftype :input,
           :scope :task}],
-  :bindings [{:from nil,
-              :to-data-refid "TicketDataInputOf_1-77"}]
+  :bindings [{:to "TicketDataObject",
+              :from "TicketDataOutputOf_1-77"}
+             {:to "TicketDataInputOf_1-77",
+              :from "TicketDataObject"}],
+  :assignment []
   }
   {...}]
 
 
-; :bindings (for :task and :userTask types only) is an unordered vector of node local data assignment expressions
+; :assignment is an unordered vector of node local data assignment expressions
 
-  [{:from          "new java.util.Date()",     ; Expression
-    :to-data-refid "_hxLYwu46EeOoCOm4Voc-mg"}, ; Results to data refid (see :data above)
-    {...}]
+[{:from "${getDataObject(\"TicketDataObject\").reporter}",
+  :to "${getDataInput(\"AnswerDataInputOfSendTask\").recipient"}
+ {:from " A ticket has been created for your issue, which is now in status
+       ${getDataObject(\"TicketDataObject\").status}. ",
+  :to "${getDataInput(\"AnswerDataInputOfSendTask\").body}"}]
 
 ; :process-flows is execution tree referenings the process-nodes
 ; :predicates are expressions or :none, that gate execution of the step

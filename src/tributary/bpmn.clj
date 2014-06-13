@@ -52,68 +52,53 @@
     (mapv #(dissoc % :itemSubjectRef) (reduce conj _di _do))))
 
 ;; Process setup
-; Each lane in the laneset represents a flow
 
-(defn- task-data-binding
-  "Returns to and from data bindings in task."
-  [input-assoc]
-  (assoc {}
-    :to-data-refid (zx/xml1-> input-assoc (pf :targetRef) zx/text)
-    :from (zx/xml1-> input-assoc (pf :sourceRef) zx/text)))
+(defn- type-io
+  [node]
+  (let [_da   (reduce conj (zx/xml-> node :dataInputAssociation)
+                      (zx/xml-> node :dataOutputAssociation))
+        _sv   (mapv #(assoc {} :from (zx/xml1-> % :sourceRef zx/text)
+                       :to (zx/xml1-> % :targetRef zx/text)) _da)
+        _sa   (into [] (flatten (mapv #(map (fn [anode]
+                            (assoc {} :to (zx/xml1-> anode :to zx/text)
+                                :from (zx/xml1-> anode :from zx/text)))
+                            (zx/xml-> % :assignment)) _da)))]
+    (assoc {} :bindings _sv :assignment _sa)))
 
-(defn- task-data-assignment
-  "Returns to and from data bindings in task."
-  [input-assoc]
-  (assoc {}
-    :to (zx/xml1-> input-assoc :to zx/text)
-    :from (zx/xml1-> input-assoc :from zx/text)))
-
-(defn- task-definition
-  "Returns general map for tasks, data declarations and data bindings"
+(defn- type-data-definition
+  "Returns general map for tasks, events, etc."
   [tnode proot]
-  (let [_di (zx/xml-> tnode (pf :dataInputAssociation))
-        _dia (zx/xml-> (first _di) (pf :assignment))]
-    (assoc {}
-      :owner-resource []
-      :data  (data-iospec tnode proot)
-      :bindings (mapv task-data-binding _di)
-      :assignment (mapv task-data-assignment _dia))))
+  (conj (assoc {}
+    :owner-resource []
+    :data  (data-iospec tnode proot)) (type-io tnode)))
 
 (defn- userTask-definition
   "Retreives potential owners (resources) of task"
   [tnode proot]
-  (let [_mp (task-definition tnode proot)
+  (let [_mp (type-data-definition tnode proot)
         _po (zx/xml-> tnode (pf :potentialOwner))]
     (assoc-in _mp [:owner-resource]
               (mapv #(:ref (dtype (zx/xml1-> % (pf :resourceRef) zx/text))) _po))))
 
-(defn- script-task-data-binding
-  "Returns to and from data bindings in task."
-  [input-assoc]
-  (assoc {}
-    :to-data-refid (zx/xml1-> input-assoc (pf :targetRef) zx/text)
-    :from (zx/xml1-> input-assoc (pf :sourceRef) zx/text)))
-
 (defn- scriptTask-definition
   "Returns map for tasks local data declarations and data bindings"
   [tnode proot]
-  (assoc (task-definition tnode proot)
-    :bindings (mapv script-task-data-binding (zx/xml-> tnode (pf :dataInputAssociation)))
+  (assoc (type-data-definition tnode proot)
     :script   (zx/xml1-> tnode (pf :script) zx/text)
     ))
 
 (defn- finish-node
   [node node-type proot]
   (condp = node-type
-    :startEvent       nil
-    :task             (task-definition node proot)
+    :startEvent       (type-data-definition node proot)
+    :task             (type-data-definition node proot)
     :userTask         (userTask-definition node proot)
     :scriptTask       (scriptTask-definition node proot)
-    :sendTask         (task-definition node proot)
-    :serviceTask      (task-definition node proot)
-    :exclusiveGateway nil
-    :endEvent         nil
-    (throw (Exception. (str "Invalid node-type " node-type)))
+    :sendTask         (type-data-definition node proot)
+    :serviceTask      (type-data-definition node proot)
+    :exclusiveGateway (type-data-definition node proot)
+    :endEvent         (type-data-definition node proot)
+    (throw (Exception. (str "Unhandled node-type " node-type)))
     ))
 
 (defn- node-include?
@@ -242,6 +227,7 @@
   (binding [*zip* (:zip parse-block)
             *prefix* (:ns parse-block)]
     (process-context)))
+
 
 ;--------------------------------------------
 (comment
