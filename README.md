@@ -39,7 +39,23 @@ ___Add to namespace___
 ````
 ___Parse source and generate a context___
 ````clojure
+; The following assumes a folder 'resources' off root of project
+; which is typically the case for default lein created projects. However;
+; the test bpmn files we use to develop tributary are in the
+; dev-resources folder of test
+
 (def t0 (trib/context-from-source "resources/Incident Management.bpmn"))
+
+; In our test fixture we use
+
+(def t0 (context-from-source
+  (-> "Incident Management.bpmn"
+      clojure.java.io/resource
+      clojure.java.io/file)))
+
+; with the following profile in project.clj
+
+:profiles {:dev {:resource-paths ["test/dev-resources"] }}
 ````
 
 ### Description (BPMN) 0.1.2-SNAPSHOT

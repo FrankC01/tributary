@@ -208,7 +208,7 @@
   []
   (let [_cntx (assoc {} :definition (:attrs (zip/node *zip*)))
         _cntx (assoc-in _cntx [:processes]
-                        (mapv #(process-def %) (zx/xml-> *zip* (pf :process))))
+                        (mapv process-def (zx/xml-> *zip* (pf :process))))
         _cntx (assoc-in _cntx [:interfaces]
                         (mapv interface-def (zx/xml-> *zip* (pf :interface))))
         _cntx (assoc-in _cntx [:resources]
@@ -232,7 +232,9 @@
 ;--------------------------------------------
 (comment
   (use 'clojure.pprint)
-  (def _s0 (tu/parse-source "resources/Incident Management.bpmn"))
+  (def _s0 (tu/parse-source (-> "Incident Management.bpmn"
+               clojure.java.io/resource
+               clojure.java.io/file)))
   (def _t0 (context _s0))
 
   (pprint (:definition _t0))
