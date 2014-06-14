@@ -39,13 +39,7 @@ ___Add to namespace___
 ````
 ___Parse source and generate a context___
 ````clojure
-; The following assumes a folder 'resources' off root of project
-; which is typically the case for default lein created projects. However;
-; the test bpmn files we use to develop tributary are in the
-; dev-resources folder of test
-
-(def t0 (trib/context-from-source "resources/Incident Management.bpmn"))
-
+; Parsing in the BPMN source
 ; In our test fixture we use
 
 (def t0 (context-from-source
@@ -53,7 +47,7 @@ ___Parse source and generate a context___
       clojure.java.io/resource
       clojure.java.io/file)))
 
-; with the following profile in project.clj
+; and have the following profile in project.clj
 
 :profiles {:dev {:resource-paths ["test/dev-resources"] }}
 ````
@@ -66,22 +60,25 @@ and support for BPMN for this project version:
 #### BPMN support and mapping
 If it is not listed here, it is not yet supported...
 
-| BPMN Term | tributary term | Comment | Since |
-| :-------- | :------------- | :------ | -----:|
-| definitions | context | the result of parsing BPMN xml | 0.1.1 |
-| definitions | :definition | attribute map of definitions xml statement | 0.1.2 |
-| itemDefinition | :items | collection on context | 0.1.2 |
-| message  | :messages | collection on context | 0.1.2 |
-| resource | :resources | collection on context | 0.1.2 |
-| interface | :interfaces | collection on context | 0.1.2 |
-| process   | :processes  | colleciton on context | 0.1.2 |
-| ioSpecification, dataInput, dataOutput | :process-data | collection process level data on individual of :processes | 0.1.2 |
-| startEvent, endEvent, task, userTask, scriptTask, sendTask, serviceTask, exclusiveGateway | :process-nodes | collection of process type references on individual of :processes | 0.1.2 |
-| laneSet   | :process-flow-refs | collection on individual of :processes | 0.1.2 |
-| lane      | :flow-refs | collection on individual of :process-flow-refs | 0.1.2 |
-| flowNodeRef | :node-refs | collection on individual of :flow-refs | 0.1.2 |
-| ioSpecification, dataInput, dataOutput | :data | collection on individual of :process-nodes | 0.1.2 |
-| ioSpecification, dataInputAssociation, dataOutputAssociation | :bindings | collection on individual of :process-nodes | 0.1.2 |
+| BPMN Term   | BPMN children   | tributary keyword | Comment  |
+| :--------   | :-------------  | :------        | :------- |
+| definitions | dataStore, itemDefinition, message, resource, interface, process | | see following |
+| definitions |  | :definition    | attribute map of definitions xml statement |
+| dataStore | | :data-stores | collection on context |
+| itemDefinition || :items | collection on context |
+| message  | | :messages  | collection on context |
+| resource | | :resources | collection on context |
+| interface| | :interfaces | collection on context |
+| process  | event, task, gateway, dataObject, ioSpecification, dataStoreReference, laneSet, sequenceFlow, dataStoreReference | :processes  | see following |
+| event    | startEvent, endEvent | :process-nodes | on each :processes individual |
+| task     | task, userTask, scriptTask, sendTask, receiveTask, serviceTask, subProcess | :process-nodes | on each :processes individual |
+| gateway  | exclusiveGateway | :process-nodes | on each :processes individual |
+| ioSpecification | dataInput, dataOutput | :data  | on each :process-node if declared |
+| dataObject | | :process-object-refs | on each :processes individual |
+| ioSpecification | dataInput, dataOutput | :process-data  | on each :processes individual if declared in source |
+| laneSet  | lane, flowNodeRef | :process-flow-refs| on each :processes individual if declared in source |
+| sequenceFlow | | :process-flows | on each :processes individual if declared in source |
+| dataStoreReference | | :process-store-refs | on each :processes individual if declared in source |
 
 ### Context Data Model
 
@@ -93,7 +90,10 @@ The context forms the data DSL for consumption and is the product of `context-fr
 => (use 'clojure.pprint)
 nil
 
-=> (def t0 (context-from-source "resources/Incident Management.bpmn))
+=> (def t0 (context-from-source
+     (-> "Incident Management.bpmn"
+     clojure.java.io/resource
+     clojure.java.io/file)))
 #'t0
 
 => (pprint (:definition t0))
@@ -111,106 +111,41 @@ nil
  :xmlns:bpmndi "http://www.omg.org/spec/BPMN/20100524/DI"}
 
 => (pprint (keys t0))
-(:definition :items :messages :resources :interfaces :processes)
+(:definition :data-stores :items :messages :resources :interfaces :processes)
 
 ````
-***Anatomy*** - Each of the highlevel and deeper level maps demonstrated
+***Anatomy*** - Context highlevel and :processes lower level maps described (key orders manually edited for readability)
 
 ````clojure
 
-; context contains a number of root level vectors typically of map(s)
+; context contains a definition map and a number of definition level vectors (typically of maps)
 
-{:definition  {...}
-  :items      [{...} {...}]
-  :messages   [{...} {...}]
-  :resources  [{...} {...}]
-  :interfaces [{...} {...}]
-  :processes  [{...} {...}]
+{:definition   {...}       ; Map of namespace assignments
+  :data-stores [{...}]     ; Vector of dataStore definitions
+  :items       [{...}]     ; Vector of itemDefinition definitions
+  :messages    [{...}]     ; Vector of message definitions
+  :resources   [{...}]     ; Vector of resource definitions
+  :interfaces  [{...}]     ; Vector of interface definitions
+  :processes   [{...}]     ; Vector of process definitions
   }
 
-; :items
+; :processes is a vector of process maps
 
-[{:id "IssueItem",
-  :structureRef {:ref "com.camunda.examples.incidentmanagement.IssueReport", :ns nil},
-  :itemKind "Information",
-  :isCollection false}
- {...}]
+(pprint (nth (:processes t0) 0))
 
-; :resources
+{:id                    string       ; e.g. "WFP-1-1",
+  :isExecutable         string       ; "true" | "false",
+  :process-store-refs   [{...}],     ; Vector of store references
+  :process-object-refs  [{...}],     ; Vector of process scoped dataObjects
+  :process-flow-refs    [{...}],     ; Vector of nested maps (parent = laneSet,
+                                     ;   children = lanes, grandchildren = flowNodeRef)
+  :process-nodes        [{...}],     ; Vector of nodes (events, tasks, etc.)
+  :process-flows        [{...}],     ; Vector of execution trees (derived from sequenceFlows)
+  :process-data         [{...}]}     ; Vector of process scope data declarations
 
-[{:name "1st Level Support", :id "FirstLevelSupportResource"},
- {...}]
-
-; :messages
-
-[{:name "addTicket Message", :id "AddTicketMessage", :itemRef "tns:TicketItem"},
- {...}]
-
-; :interface example, note the nested array of operations and messages
-
-[{:name "Product Backlog Interface"
-  :implementation {:lang "java", :ref "com.camunda.examples.incidentmanagement.ProductBacklog"},
-  :operations [{:name "addTicketOperation",
-                :id "addTicketOperation",
-                :messages [{:msg-id "AddTicketMessage"}],
-                :implementationRef "addTicket"}]},
-  {...}]
-
-; :processes is a vector of process contexts
-
-(pprint (first (:processes t0)))
-
-[{:id                   "WFP-1-1",
-  :isExecutable         "true",
-  :process-flow-refs    [...],
-  :process-nodes        [...],
-  :process-flows        [...],
-  :process-data         [...]},
-  {...}]
-
-; :process-flow-refs - summary of laneSet, lanes and flowNodeRefs
-
-[{:id "ls_1-1"
-  :flow-refs [{:node-refs ["_1-13" "_1-26" "_1-77" "_1-128" "_1-150" "_1-201" "_1-376"],
-               :name "1st level support",
-               :partitionElementRef "tns:FirstLevelSupportResource",
-               :id "_1-9"}
-             {...}],
-  }]
-
-; :process-nodes, an unordered vector of nodes (startEvent, task, etc.) assocated with process
-
-[{:id "_1-77",
-  :name "edit 1st level ticket",
-  :type :userTask,
-  :owner-resource ["FirstLevelSupportResource"],
-  :data [{:item-id {:ref "TicketItem", :ns "tns"},    ; reference into :process-data
-          :id "TicketDataOutputOf_1-77",              ; node data local identity
-          :reftype :output,                           ; used as :input or :output
-          :scope :task}                               ; scope as :task or :process
-          {:item-id {:ref "TicketItem", :ns "tns"},
-          :id "TicketDataInputOf_1-77",
-          :reftype :input,
-          :scope :task}],
-  :bindings [{:to "TicketDataObject",
-              :from "TicketDataOutputOf_1-77"}
-             {:to "TicketDataInputOf_1-77",
-              :from "TicketDataObject"}],
-  :assignment []
-  }
-  {...}]
-
-
-; :assignment is an unordered vector of node local data assignment expressions
-
-[{:from "${getDataObject(\"TicketDataObject\").reporter}",
-  :to "${getDataInput(\"AnswerDataInputOfSendTask\").recipient"}
- {:from " A ticket has been created for your issue, which is now in status
-       ${getDataObject(\"TicketDataObject\").status}. ",
-  :to "${getDataInput(\"AnswerDataInputOfSendTask\").body}"}]
-
-; :process-flows is execution tree referenings the process-nodes
-; :predicates are expressions or :none, that gate execution of the step
+; :process-flows has 0 or more execution trees  and references to process-nodes
+; :predicates are conditional expressions or :none, that gate execution of the step
+; :node describes the type and id (can be used to lookup in :process-nodes)
 
 [{:predicates [:none],
   :next

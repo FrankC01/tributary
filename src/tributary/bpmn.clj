@@ -29,15 +29,24 @@
       2 (assoc {} :ns (_x 0) :ref (_x 1))
       3 (assoc {} :ns (_x 1) :ref (_x 2)))))
 
+(defn- kw-to-refkw
+  [kw]
+  (keyword (:ref (dtype (str kw)))))
+
 ;; Data setup
 
 (def ^:private data-attrs [:itemSubjectRef :name :isCollection])
-(def ^:private node-ex [:ioSpecification :laneSet :lane :sequenceFlow :dataObject])
+(def ^:private node-ex [:ioSpecification :laneSet :lane :sequenceFlow :dataObject
+                        :dataObjectReference :dataStoreReference
+                        :textAnnotation :association])
 
 (defn- data-object
   [refdata reftype scope]
-  (let [_at (conj {:reftype reftype :scope scope} (:attrs (zip/node refdata)))]
-    (assoc _at :item-id (dtype (:itemSubjectRef _at)))))
+  (let [_at (conj {:reftype reftype :scope scope} (:attrs (zip/node refdata)))
+        _at (assoc _at :item-id (if (nil? (:itemSubjectRef _at))
+                       nil
+                       (dtype (:itemSubjectRef _at))))]
+    _at))
 
 (defn- data-iospec
   "root can be process or task. Takes the result of :ioSpecifiction 'iospec' zip node
@@ -55,10 +64,10 @@
 
 (defn- type-io
   [node]
-  (let [_da   (reduce conj (zx/xml-> node :dataInputAssociation)
-                      (zx/xml-> node :dataOutputAssociation))
-        _sv   (mapv #(assoc {} :from (zx/xml1-> % :sourceRef zx/text)
-                       :to (zx/xml1-> % :targetRef zx/text)) _da)
+  (let [_da   (reduce conj (zx/xml-> node (pf :dataInputAssociation))
+                      (zx/xml-> node (pf :dataOutputAssociation)))
+        _sv   (mapv #(assoc {} :from (zx/xml1-> % (pf :sourceRef) zx/text)
+                       :to (zx/xml1-> % (pf :targetRef) zx/text)) _da)
         _sa   (into [] (flatten (mapv #(map (fn [anode]
                             (assoc {} :to (zx/xml1-> anode :to zx/text)
                                 :from (zx/xml1-> anode :from zx/text)))
@@ -72,45 +81,74 @@
     :owner-resource []
     :data  (data-iospec tnode proot)) (type-io tnode)))
 
-(defn- userTask-definition
+(defn- task-loops
+  "Currently just the attributes of the node. BPMN 2.0 declares that conformance
+  includes expressions, events, inputs and outputs"
+  [tnode]
+  (mapv #(conj (:attrs (zip/node %)) {:type (:tag (zip/node %))})
+        (reduce conj (zx/xml-> tnode (pf :standardLoopCharacteristics))
+          (zx/xml-> tnode (pf :multiInstanceLoopCharacteristics)))))
+
+(defn- task-definition
   "Retreives potential owners (resources) of task"
   [tnode proot]
   (let [_mp (type-data-definition tnode proot)
-        _po (zx/xml-> tnode (pf :potentialOwner))]
-    (assoc-in _mp [:owner-resource]
-              (mapv #(:ref (dtype (zx/xml1-> % (pf :resourceRef) zx/text))) _po))))
+        _mp (assoc _mp :owner-resource
+                      (mapv #(:ref (dtype (zx/xml1-> % (pf :resourceRef) zx/text)))
+                            (zx/xml-> tnode (pf :potentialOwner))))
+        _mp (assoc _mp :loop (task-loops tnode))
+        _mp (assoc _mp :script (zx/xml1-> tnode (pf :script) zx/text))]
+    _mp))
 
-(defn- scriptTask-definition
-  "Returns map for tasks local data declarations and data bindings"
+(def ^:private evdefs [:messageEventDefinition :timerEventDefinition
+                       :cancelEventDefinition :compensationEventDefinition
+                       :conditionalEventDefinition :errorEventDefinition
+                       :escalationEventDefinition :linkEventDefinition
+                       :signalEventDefinition :terminateEventDefinition])
+(defn- event-definition
   [tnode proot]
-  (assoc (type-data-definition tnode proot)
-    :script   (zx/xml1-> tnode (pf :script) zx/text)
-    ))
+  (let [_mp (type-data-definition tnode proot)
+        _ev (filter #(some? (some #{(kw-to-refkw (:tag %))} evdefs))
+                    (zip/children tnode))]
+    (assoc _mp :event-def (mapv #(conj (:attrs %) {:type (:tag %)}) _ev))))
 
 (defn- finish-node
   [node node-type proot]
-  (condp = node-type
-    :startEvent       (type-data-definition node proot)
-    :task             (type-data-definition node proot)
-    :userTask         (userTask-definition node proot)
-    :scriptTask       (scriptTask-definition node proot)
-    :sendTask         (type-data-definition node proot)
-    :serviceTask      (type-data-definition node proot)
+  (condp = (kw-to-refkw node-type)
+    :startEvent       (event-definition node proot)
+    :endEvent         (event-definition node proot)
+
+    :task             (task-definition node proot)
+    :userTask         (task-definition node proot)
+    :scriptTask       (task-definition node proot)
+    :sendTask         (task-definition node proot)
+    :receiveTask      (task-definition node proot)
+    :serviceTask      (task-definition node proot)
+    :subProcess       (task-definition node proot)
+
     :exclusiveGateway (type-data-definition node proot)
-    :endEvent         (type-data-definition node proot)
+
     (throw (Exception. (str "Unhandled node-type " node-type)))
     ))
 
 (defn- node-include?
   [node]
   ((complement some?)
-   (some (conj #{} (keyword (:ref (dtype (name (:tag node)))))) node-ex)))
+   (some (conj #{} (kw-to-refkw (:tag node))) node-ex)))
+
+(defn- nd
+  [root tagkw idref]
+  (let [_x (zx/xml1-> root tagkw (zx/attr= :id idref))]
+    _x))
 
 (defn- nodes-only
   [proot]
-  (mapv #(conj (assoc (:attrs %) :type (:tag %))
-               (finish-node (zx/xml1-> proot (pf (:tag %))
-                                     (zx/attr= :id (:id (:attrs %)))) (:tag %) proot))
+  (mapv #(conj (assoc (:attrs %) :type (:tag %) )
+               (finish-node (nd proot (:tag %) (:id (:attrs %))) (:tag %) proot)
+
+               #_(finish-node (zx/xml1-> proot (pf (:tag %))
+                                     (zx/attr= :id (:id (:attrs %)))) (:tag %) proot)
+               )
         (filter node-include? (zip/children proot))))
 
 (defn- node-def
@@ -159,8 +197,9 @@
 
 (defn- node-driver
   [proot nodes]
-  (let [_se (map :id (tu/nodes-for-type :startEvent nodes))]
-    (first (map #(step-def % proot nodes) _se))))
+  (let [_se (map :id (tu/nodes-for-type (pf :startEvent) nodes))
+        _fe (first (map #(step-def % proot nodes) _se))]
+    _fe))
 
 (defn- process-lane
   [lane]
@@ -176,12 +215,18 @@
 (defn- process-def
   "Parse the process data, nodes and steps"
   [proot]
-  (let [_flowrefs (mapv process-lanesets (zx/xml-> proot (pf :laneSet)))
-        _nodedefs (nodes-only proot)
+  (let [_nodedefs (nodes-only proot)
         _pn (assoc (:attrs (zip/node proot))
               :process-data (data-iospec proot proot)
-              :process-flows (node-driver proot _nodedefs))]
-    (assoc _pn :process-nodes _nodedefs :process-flow-refs _flowrefs)))
+              :process-object-refs (mapv (comp :attrs zip/node )
+                                          (zx/xml-> proot (pf :dataObject)))
+              :process-store-refs (mapv (comp :attrs zip/node)
+                                    (zx/xml-> proot (pf :dataStoreReference)))
+              :process-flows (node-driver proot _nodedefs)
+              :process-nodes _nodedefs
+              :process-flow-refs (mapv process-lanesets
+                                       (zx/xml-> proot (pf :laneSet))))]
+    _pn))
 
 (defn- interface-op
   [op]
@@ -207,6 +252,9 @@
   "For each process, parse a process definition context"
   []
   (let [_cntx (assoc {} :definition (:attrs (zip/node *zip*)))
+        _cntx (assoc-in _cntx [:data-stores]
+                        (mapv (comp :attrs zip/node)
+                              (zx/xml-> *zip* (pf :dataStore))))
         _cntx (assoc-in _cntx [:processes]
                         (mapv process-def (zx/xml-> *zip* (pf :process))))
         _cntx (assoc-in _cntx [:interfaces]
@@ -231,23 +279,16 @@
 
 ;--------------------------------------------
 (comment
-  (use 'clojure.pprint)
   (def _s0 (tu/parse-source (-> "Incident Management.bpmn"
                clojure.java.io/resource
                clojure.java.io/file)))
-  (def _t0 (context _s0))
+  (def _s0 (tu/parse-source (-> "Nobel Prize Process.bpmn"
+               clojure.java.io/resource
+               clojure.java.io/file)))
 
-  (pprint (:definition _t0))
-  (pprint (:items _t0))
-  (pprint (:resources _t0))
-  (pprint (:messages _t0))
-  (pprint (:interfaces _t0))
-  (pprint (:processes _t0))
-
-  (pprint (:process-flow-refs (first (:processes _t0))))
-  (pprint (:process-nodes (first (:processes _t0))))
-  (pprint (:process-flows (first (:processes _t0))))
-  (pprint (:process-data (first (:processes _t0))))
+  (time (def _t0 (context _s0)))
+  (use 'clojure.pprint)
+  (count (:processes _t0))
 
   )
 
