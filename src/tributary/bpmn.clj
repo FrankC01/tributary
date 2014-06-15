@@ -5,6 +5,7 @@
             [tributary.utils :as tu]
             [clojure.xml :as xml]
             [clojure.set :as set]
+            [clojure.data.zip :as dz]
             [clojure.data.zip.xml :as zx])
   )
 
@@ -23,15 +24,37 @@
 
 (defn- dtype
   [node]
-  (let [_x (clojure.string/split node #":")]
-    (condp = (count _x)
-      1 (assoc {} :ns nil :ref (_x 0))
-      2 (assoc {} :ns (_x 0) :ref (_x 1))
-      3 (assoc {} :ns (_x 1) :ref (_x 2)))))
+  (when node
+    (let [_x (clojure.string/split node #":")]
+      (condp = (count _x)
+        1 (assoc {} :ns nil :ref (_x 0))
+        2 (assoc {} :ns (_x 0) :ref (_x 1))
+        3 (assoc {} :ns (_x 1) :ref (_x 2))))))
 
 (defn- kw-to-refkw
+  "Takes a keyword, parses and returns the leaf"
   [kw]
   (keyword (:ref (dtype (str kw)))))
+
+; data.zip.xml selector extensions
+
+(defn- mtags=
+  "Similar to (zx/tag= ...) but takes additional tag keywords to
+  'or' in results"
+  [coll]
+  (fn [loc]
+    (filter
+     (fn [l] (and (zip/branch? l)
+                  (some #(= % (:tag (zip/node l))) coll)))
+     (if (dz/auto? loc)
+       (dz/children-auto loc)
+       (list (dz/auto true loc))))))
+
+(defn- ptags=
+  "Annotes keywords with pf prior to calling mtags="
+  [& c]
+  (mtags= (map pf c)))
+
 
 ;; Data setup
 
@@ -41,38 +64,31 @@
                         :textAnnotation :association])
 
 (defn- data-object
-  [refdata reftype scope]
-  (let [_at (conj {:reftype reftype :scope scope} (:attrs (zip/node refdata)))
-        _at (assoc _at :item-id (if (nil? (:itemSubjectRef _at))
-                       nil
-                       (dtype (:itemSubjectRef _at))))]
-    _at))
+  [refdata scope]
+  (conj {:reftype (:tag refdata) :scope scope}
+        (update-in (:attrs refdata) [:itemSubjectRef] dtype)))
 
 (defn- data-iospec
-  "root can be process or task. Takes the result of :ioSpecifiction 'iospec' zip node
+  "root can be process or node. Takes the result of :ioSpecifiction 'iospec' zip node
   then uses the :itemSubjectRef as :id filter for completing the definition"
   [specroot root]
-  (let [_sc (if (= specroot root) :process :task)
-        _di (map #(data-object % :input _sc)
-                 (zx/xml-> specroot  (pf :ioSpecification) (pf :dataInput)))
-        _do (map #(data-object % :output _sc)
-                 (zx/xml-> specroot  (pf :ioSpecification) (pf :dataOutput)))
-        ]
-    (mapv #(dissoc % :itemSubjectRef) (reduce conj _di _do))))
+  (let [_sc (if (= specroot root) :process :task)]
+    (mapv #(data-object % _sc)
+          (zx/xml-> specroot (pf :ioSpecification)
+                    (ptags= :dataInput :dataOutput) zip/node))))
 
 ;; Process setup
 
 (defn- type-io
   [node]
-  (let [_da   (reduce conj (zx/xml-> node (pf :dataInputAssociation))
-                      (zx/xml-> node (pf :dataOutputAssociation)))
+  (let [_da   (zx/xml-> node (ptags= :dataInputAssociation :dataOutputAssociation))
         _sv   (mapv #(assoc {} :from (zx/xml1-> % (pf :sourceRef) zx/text)
                        :to (zx/xml1-> % (pf :targetRef) zx/text)) _da)
         _sa   (into [] (flatten (mapv #(map (fn [anode]
                             (assoc {} :to (zx/xml1-> anode :to zx/text)
                                 :from (zx/xml1-> anode :from zx/text)))
                             (zx/xml-> % :assignment)) _da)))]
-    (assoc {} :bindings _sv :assignment _sa)))
+    (assoc {} :bindings _sv :assignments _sa)))
 
 (defn- type-data-definition
   "Returns general map for tasks, events, etc."
@@ -81,13 +97,15 @@
     :owner-resource []
     :data  (data-iospec tnode proot)) (type-io tnode)))
 
+(def ^:private loop-types [:standardLoopCharacteristics
+                           :multiInstanceLoopCharacteristics])
+
 (defn- task-loops
   "Currently just the attributes of the node. BPMN 2.0 declares that conformance
   includes expressions, events, inputs and outputs"
   [tnode]
-  (mapv #(conj (:attrs (zip/node %)) {:type (:tag (zip/node %))})
-        (reduce conj (zx/xml-> tnode (pf :standardLoopCharacteristics))
-          (zx/xml-> tnode (pf :multiInstanceLoopCharacteristics)))))
+  (mapv #(conj (:attrs %) {:type (:tag  %)})
+        (zx/xml-> tnode (ptags= loop-types) zip/node)))
 
 (defn- task-definition
   "Retreives potential owners (resources) of task"
@@ -136,26 +154,22 @@
   ((complement some?)
    (some (conj #{} (kw-to-refkw (:tag node))) node-ex)))
 
-(defn- nd
+(defn- gbyid
+  "Returns the single element of type tagkw with attribute id = idref"
   [root tagkw idref]
-  (let [_x (zx/xml1-> root tagkw (zx/attr= :id idref))]
-    _x))
+  (zx/xml1-> root tagkw (zx/attr= :id idref)))
 
 (defn- nodes-only
   [proot]
   (mapv #(conj (assoc (:attrs %) :type (:tag %) )
-               (finish-node (nd proot (:tag %) (:id (:attrs %))) (:tag %) proot)
-
-               #_(finish-node (zx/xml1-> proot (pf (:tag %))
-                                     (zx/attr= :id (:id (:attrs %)))) (:tag %) proot)
-               )
+               (finish-node (gbyid proot (:tag %) (:id (:attrs %))) (:tag %) proot))
         (filter node-include? (zip/children proot))))
 
 (defn- node-def
   "Generic node definition parse"
   [node-id proot _cat]
   (let [_t (first (filter #(= (:id %) node-id) _cat))
-        _n (zx/xml1-> proot (:type _t) (zx/attr= :id node-id))
+        _n (gbyid proot (:type _t) node-id)
         _a (conj _t (:attrs (zip/node _n))
                  {:type (keyword (:ref (dtype (str (:type _t)))))})
         ]
@@ -276,7 +290,6 @@
             *prefix* (:ns parse-block)]
     (process-context)))
 
-
 ;--------------------------------------------
 (comment
   (def _s0 (tu/parse-source (-> "Incident Management.bpmn"
@@ -290,5 +303,20 @@
   (use 'clojure.pprint)
   (count (:processes _t0))
 
+  (defn map-zipper
+    [m]
+    (zip/zipper
+     (fn [x] (let [_r (or (map? (second x)) (vector? (second x)))]
+               _r))
+     (fn [x] (seq (if (map? x) x (nth x 1))))
+     (fn [x children]
+       (if (map? x)
+         (into {} children)
+         (assoc x 1 (into {} children))))
+     m))
+
+  (pprint (time (-> _z0 zip/next zip/right zip/children)))
+  (pprint (time (seq (:messages _t0))))
+  (count (zx/xml-> _z0 (_m :semantic:message)))
   )
 
