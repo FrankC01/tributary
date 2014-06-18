@@ -12,6 +12,7 @@
 ;; Bindings
 (def ^:dynamic ^:private *zip* nil)
 (def ^:dynamic ^:private *prefix* nil)
+(def ^:dynamic ^:private *cycle* nil)
 
 ;; Utility
 
@@ -60,7 +61,8 @@
 
 (def ^:private data-attrs [:itemSubjectRef :name :isCollection])
 (def ^:private node-ex [:ioSpecification :laneSet :lane :sequenceFlow :dataObject
-                        :dataObjectReference :dataStoreReference
+                        :dataObjectReference :dataStoreReference :incoming :outgoing
+                        :standardLoopCharacteristics :multiInstanceLoopCharacteristics
                         :textAnnotation :association])
 
 (defn- data-object
@@ -100,23 +102,38 @@
 (def ^:private loop-types [:standardLoopCharacteristics
                            :multiInstanceLoopCharacteristics])
 
-(defn- task-loops
+(defn- activity-loops
   "Currently just the attributes of the node. BPMN 2.0 declares that conformance
   includes expressions, events, inputs and outputs"
   [tnode]
   (mapv #(conj (:attrs %) {:type (:tag  %)})
         (zx/xml-> tnode (ptags= loop-types) zip/node)))
 
-(defn- task-definition
+(defn- activity-definition
   "Retreives potential owners (resources) of task"
   [tnode proot]
   (let [_mp (type-data-definition tnode proot)
         _mp (assoc _mp :owner-resource
                       (mapv #(:ref (dtype (zx/xml1-> % (pf :resourceRef) zx/text)))
                             (zx/xml-> tnode (pf :potentialOwner))))
-        _mp (assoc _mp :loop (task-loops tnode))
+        _mp (assoc _mp :loop (activity-loops tnode))
         _mp (assoc _mp :script (zx/xml1-> tnode (pf :script) zx/text))]
     _mp))
+
+(defn- boundary-task-definition
+  [tnode proot f]
+  (assoc (f tnode proot) :event-refs
+    (mapv #(:id (:attrs %))
+          (zx/xml-> proot (pf :boundaryEvent)
+                    (zx/attr= :attachedToRef ((comp :id :attrs zip/node) tnode))
+                    zip/node))))
+
+(declare process-def)
+
+(defn- subprocess-definition
+  [tnode proot]
+  (assoc (boundary-task-definition tnode proot activity-definition)
+    :context [(process-def tnode)]))
 
 (def ^:private evdefs [:messageEventDefinition :timerEventDefinition
                        :cancelEventDefinition :compensationEventDefinition
@@ -133,18 +150,28 @@
 (defn- finish-node
   [node node-type proot]
   (condp = (kw-to-refkw node-type)
-    :startEvent       (event-definition node proot)
-    :endEvent         (event-definition node proot)
+    :startEvent             (event-definition node proot)
+    :endEvent               (event-definition node proot)
+    :boundaryEvent          (event-definition node proot)
+    :intermediateThrowEvent (event-definition node proot)
+    :intermediateCatchEvent (event-definition node proot)
 
-    :task             (task-definition node proot)
-    :userTask         (task-definition node proot)
-    :scriptTask       (task-definition node proot)
-    :sendTask         (task-definition node proot)
-    :receiveTask      (task-definition node proot)
-    :serviceTask      (task-definition node proot)
-    :subProcess       (task-definition node proot)
+    :task             (boundary-task-definition node proot activity-definition)
+    :userTask         (boundary-task-definition node proot activity-definition)
+    :scriptTask       (boundary-task-definition node proot activity-definition)
+    :sendTask         (boundary-task-definition node proot activity-definition)
+    :receiveTask      (boundary-task-definition node proot activity-definition)
+    :serviceTask      (boundary-task-definition node proot activity-definition)
+    :callActivity     (boundary-task-definition node proot type-data-definition)
 
-    :exclusiveGateway (type-data-definition node proot)
+    :subProcess       (subprocess-definition node proot)
+
+
+
+    :exclusiveGateway  (type-data-definition node proot)
+    :parallelGateway   (type-data-definition node proot)
+    :inclusiveGateway  (type-data-definition node proot)
+    :eventBasedGateway (type-data-definition node proot)
 
     (throw (Exception. (str "Unhandled node-type " node-type)))
     ))
@@ -165,55 +192,82 @@
                (finish-node (gbyid proot (:tag %) (:id (:attrs %))) (:tag %) proot))
         (filter node-include? (zip/children proot))))
 
-(defn- node-def
-  "Generic node definition parse"
-  [node-id proot _cat]
-  (let [_t (first (filter #(= (:id %) node-id) _cat))
-        _n (gbyid proot (:type _t) node-id)
-        _a (conj _t (:attrs (zip/node _n))
-                 {:type (keyword (:ref (dtype (str (:type _t)))))})
-        ]
-    (conj _a (finish-node _n (:type _a) proot))))
 
-(declare step-def)
+(defn- is-visited?
+  [node-id]
+  (some? (some #{node-id} @*cycle*)))
+
+(declare step-def step-ref)
+
+(defn- step-helper
+  [tid proot nodes]
+  (let [_trg (tu/node-for-id tid nodes)
+        _hit (or (:event-refs _trg) [])
+        _hit (or (first _hit) false)]
+    (if _hit
+      (do
+        [{:seq-name "" :sequence :step
+        :node (select-keys _trg [:id :type :name])
+        :predicates [:none]
+        :next (step-def _hit proot nodes)
+        }]
+        )
+      (step-def tid proot nodes))))
 
 (defn- step-ref
   "Step definition helper"
   [sqref proot nodes]
   (let [_sqnode  (zip/node sqref)
+        _node    (tu/node-for-id (:sourceRef (:attrs  _sqnode)) nodes)
         _idsmap  (set/rename-keys
-                  (select-keys (:attrs _sqnode) [:sourceRef :targetRef :name])
-                  {:sourceRef :node :targetRef :next :name :arc-name})
-        _stptype  {:node (select-keys (tu/node-for-id (:node _idsmap) nodes)
-                                      [:id :type])}
+                  (select-keys (:attrs _sqnode) [:targetRef :name])
+                  {:targetRef :next :name :seq-name})
+        _stptype  {:node (select-keys _node [:id :type :name])
+                   :sequence :step}
         _conddref (zx/xml1-> sqref (pf :conditionExpression) zx/text)
         _conds    {:predicates
                    [(cond (or (nil? _conddref) (= _conddref "")) :none
-                          :else _conddref)]}]
-    (conj _idsmap _stptype _conds {:next (step-def (:next _idsmap) proot nodes)})))
+                          :else _conddref)]}
+        ]
+    (conj _idsmap _stptype _conds
+          {:next (step-helper (:next _idsmap) proot nodes)})))
 
 (defn- step-def
-  "Parse the sequence flow for step definition"
+  "Head parse for sequenceFlow"
   [srcid proot nodes]
   (let [_sx (zx/xml-> proot (pf :sequenceFlow) (zx/attr= :sourceRef srcid))
-        _sd (if (empty? _sx)
-              [{:arc-name ""
-                :node {:id srcid :type (:type (tu/node-for-id srcid nodes))}
-                :next []
-                :predicates [:none]
-                }]
-              (mapv #(step-ref % proot nodes) _sx))
-        ]
-    _sd))
+        _iv (or (is-visited? srcid) false)
+        _n0 (tu/node-for-id srcid nodes)]
+    ;(println "Processing " srcid " in visitors " _iv " empty " (empty? _sx))
+    (if (empty? _sx)
+      [{:seq-name ""
+        :sequence :end
+        :node (select-keys _n0 [:id :type :name])
+        :next []
+        :predicates [:none]
+        }]
+      (if _iv
+        [{:seq-name ""
+          :sequence :jump
+          :node (select-keys _n0 [:id :type :name])
+          :next []
+          :predicates [:none]
+          }]
+        (do
+          (swap! *cycle* conj srcid)
+          (mapv #(step-ref % proot nodes) _sx))))))
 
 ; TODO: In lane attributes, the partitionElementRef may be resource ref
 ; need to either rename or ignore/drop from returns
 
 (defn- node-driver
   [proot nodes]
-  (let [_se (map :id (tu/nodes-for-type (pf :startEvent) nodes))
-        _fe (first (map #(step-def % proot nodes) _se))]
-    _fe))
+  (binding [*cycle* (atom [])]
+    (let [_se (map :id (tu/nodes-for-type (pf :startEvent) nodes))
+          _fe (first (map #(step-def % proot nodes) _se))]
+      (reset! *cycle* [])
+    _fe)))
+
 
 (defn- process-lane
   [lane]
@@ -289,34 +343,3 @@
   (binding [*zip* (:zip parse-block)
             *prefix* (:ns parse-block)]
     (process-context)))
-
-;--------------------------------------------
-(comment
-  (def _s0 (tu/parse-source (-> "Incident Management.bpmn"
-               clojure.java.io/resource
-               clojure.java.io/file)))
-  (def _s0 (tu/parse-source (-> "Nobel Prize Process.bpmn"
-               clojure.java.io/resource
-               clojure.java.io/file)))
-
-  (time (def _t0 (context _s0)))
-  (use 'clojure.pprint)
-  (count (:processes _t0))
-
-  (defn map-zipper
-    [m]
-    (zip/zipper
-     (fn [x] (let [_r (or (map? (second x)) (vector? (second x)))]
-               _r))
-     (fn [x] (seq (if (map? x) x (nth x 1))))
-     (fn [x children]
-       (if (map? x)
-         (into {} children)
-         (assoc x 1 (into {} children))))
-     m))
-
-  (pprint (time (-> _z0 zip/next zip/right zip/children)))
-  (pprint (time (seq (:messages _t0))))
-  (count (zx/xml-> _z0 (_m :semantic:message)))
-  )
-

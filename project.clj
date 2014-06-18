@@ -6,5 +6,6 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.zip "0.1.1"]
                  ]
-  :profiles {:dev {:resource-paths ["test/dev-resources"] }}
+  :profiles {:dev {:source-paths ["dev/src"]
+                   :resource-paths ["dev/resources"] }}
   )

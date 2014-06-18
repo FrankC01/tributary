@@ -23,6 +23,7 @@ First thoughts are to establish a context by which analyzers and execution may o
 ## Usage 0.1.2-SNAPSHOT
 Be warned, the current state will be turbulent whilst I hone the skills!
 
+
 Assuming you've cloned and installed tributary:
 
 ___Add the dependency to your project.clj___
@@ -49,7 +50,8 @@ ___Parse source and generate a context___
 
 ; and have the following profile in project.clj
 
-:profiles {:dev {:resource-paths ["test/dev-resources"] }}
+:profiles {:dev {:source-paths ["dev/src"]
+                 :resource-paths ["dev/resources"]}}
 ````
 
 ### Description (BPMN) 0.1.2-SNAPSHOT
@@ -69,10 +71,11 @@ If it is not listed here, it is not yet supported...
 | message  | | :messages  | collection on context |
 | resource | | :resources | collection on context |
 | interface| | :interfaces | collection on context |
-| process  | event, task, gateway, dataObject, ioSpecification, dataStoreReference, laneSet, sequenceFlow, dataStoreReference | :processes  | see following |
-| event    | startEvent, endEvent | :process-nodes | on each :processes individual |
+| process  | event, task, gateway, dataObject, ioSpecification, dataStoreReference, callActivity laneSet, sequenceFlow, dataStoreReference | :processes  | see following |
+| callActivity | | :process-nodes | on each :process individual |
+| event    | startEvent, endEvent, boundaryEvent, intermediateThrowEvent, intermediateCatchEvent | :process-nodes | on each :processes individual |
 | task     | task, userTask, scriptTask, sendTask, receiveTask, serviceTask, subProcess | :process-nodes | on each :processes individual |
-| gateway  | exclusiveGateway | :process-nodes | on each :processes individual |
+| gateway  | exclusiveGateway, parallelGateway, inclusiveGateway, eventBasedGateway | :process-nodes | on each :processes individual |
 | ioSpecification | dataInput, dataOutput | :data  | on each :process-node if declared |
 | dataObject | | :process-object-refs | on each :processes individual |
 | ioSpecification | dataInput, dataOutput | :process-data  | on each :processes individual if declared in source |
