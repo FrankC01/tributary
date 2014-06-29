@@ -20,7 +20,8 @@
 
 (defn parse-source
   [input-source]
-  (xtype (zip/xml-zip (xml/parse input-source))))
+  (let [_raw (xml/parse input-source)]
+    (conj (xtype (zip/xml-zip _raw)) {:raw _raw})))
 
 (defn node-for-id
   "Returns first node matching node-id in nodes collection"

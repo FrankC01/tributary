@@ -3,27 +3,25 @@
   tributary.bpmn
   (:require [clojure.zip :as zip]
             [tributary.utils :as tu]
+            [tributary.tzip :as tz]
             [clojure.xml :as xml]
             [clojure.set :as set]
-            [clojure.data.zip :as dz]
             [clojure.data.zip.xml :as zx])
   )
 
 ;; Bindings
 (def ^:dynamic ^:private *zip* nil)
 (def ^:dynamic ^:private *prefix* nil)
-(def ^:dynamic ^:private *cycle* nil)
+(def ^:dynamic ^:private *nodes* nil)
 
 ;; Utility
 
-(defn- pf
-  "Forms fully qualified keyword considering xmlns prefix"
+(defn- pref
+  "Forms fully qualified keyword considering xmlns *prefix*"
   [kw]
-  (if (nil? *prefix*)
-    kw
-  (keyword (str *prefix* kw))))
+  (if (nil? *prefix*) kw (keyword (str *prefix* kw))))
 
-(defn- dtype
+(defn- nsref
   [node]
   (when node
     (let [_x (clojure.string/split node #":")]
@@ -32,314 +30,352 @@
         2 (assoc {} :ns (_x 0) :ref (_x 1))
         3 (assoc {} :ns (_x 1) :ref (_x 2))))))
 
-(defn- kw-to-refkw
-  "Takes a keyword, parses and returns the leaf"
+(defn- nskw2kw
+  "Takes a :ns:keyword, parses and returns ref as a keyword"
   [kw]
-  (keyword (:ref (dtype (str kw)))))
-
-; data.zip.xml selector extensions
-
-(defn- mtags=
-  "Similar to (zx/tag= ...) but takes additional tag keywords to
-  'or' in results"
-  [coll]
-  (fn [loc]
-    (filter
-     (fn [l] (and (zip/branch? l)
-                  (some #(= % (:tag (zip/node l))) coll)))
-     (if (dz/auto? loc)
-       (dz/children-auto loc)
-       (list (dz/auto true loc))))))
+  (keyword (:ref (nsref (str kw)))))
 
 (defn- ptags=
-  "Annotes keywords with pf prior to calling mtags="
+  "Annotes keywords with pref prior to calling mtags="
   [& c]
-  (mtags= (map pf c)))
+  (tz/mtags= (map pref c)))
 
 
-;; Data setup
+;; Results block functions
 
-(def ^:private data-attrs [:itemSubjectRef :name :isCollection])
-(def ^:private node-ex [:ioSpecification :laneSet :lane :sequenceFlow :dataObject
-                        :dataObjectReference :dataStoreReference :incoming :outgoing
-                        :standardLoopCharacteristics :multiInstanceLoopCharacteristics
-                        :textAnnotation :association])
+(defn tagblock
+  "Returns a map for node, marking it as !group with optional tag override"
+  [node & [tag]]
+  (conj {:tag (or tag (nskw2kw (:tag node)))
+         :content nil} (conj {:group "false"} (select-keys node [:attrs]))))
 
-(defn- data-object
-  [refdata scope]
-  (conj {:reftype (:tag refdata) :scope scope}
-        (update-in (:attrs refdata) [:itemSubjectRef] dtype)))
+(defn tagblockwc
+  [node & [tag]]
+  "Same as tagblock but returns content as well"
+  (assoc (tagblock node tag) :content (:content node)))
 
-(defn- data-iospec
-  "root can be process or node. Takes the result of :ioSpecifiction 'iospec' zip node
-  then uses the :itemSubjectRef as :id filter for completing the definition"
-  [specroot root]
-  (let [_sc (if (= specroot root) :process :task)]
-    (mapv #(data-object % _sc)
-          (zx/xml-> specroot (pf :ioSpecification)
-                    (ptags= :dataInput :dataOutput) zip/node))))
+(defn tagblockmap
+  "Same as tagblock but imbues atmap into entity attribute map"
+  [node atmap & [tag]]
+  (update-in (tagblock node tag) [:attrs] conj atmap))
 
-;; Process setup
+(defn group-definition
+  "Populates a group section for various group types and returns
+  a vector of individuals in the groups content element.
+  loc refers to zip location
+  grpkw identifies the group
+  cform is the function for each individual of loc"
+  [loc grpkw cform]
+  (let [_nds (or (mapv cform loc) nil)]
+    {:tag :group
+     :attrs {:count (count _nds) :dtype grpkw}
+     :content _nds}))
 
-(defn- type-io
-  [node]
-  (let [_da   (zx/xml-> node (ptags= :dataInputAssociation :dataOutputAssociation))
-        _sv   (mapv #(assoc {} :from (zx/xml1-> % (pf :sourceRef) zx/text)
-                       :to (zx/xml1-> % (pf :targetRef) zx/text)) _da)
-        _sa   (into [] (flatten (mapv #(map (fn [anode]
-                            (assoc {} :to (zx/xml1-> anode :to zx/text)
-                                :from (zx/xml1-> anode :from zx/text)))
-                            (zx/xml-> % :assignment)) _da)))]
-    (assoc {} :bindings _sv :assignments _sa)))
 
-(defn- type-data-definition
-  "Returns general map for tasks, events, etc."
-  [tnode proot]
-  (conj (assoc {}
-    :owner-resource []
-    :data  (data-iospec tnode proot)) (type-io tnode)))
+;; node parsing functions
+(def data-btype {:dataObject :object
+                 :dataInput  :input
+                 :dataOutput :output })
 
-(def ^:private loop-types [:standardLoopCharacteristics
-                           :multiInstanceLoopCharacteristics])
+(defn- association
+  [loc]
+  (let [_tag (nskw2kw (:tag (zip/node loc)))
+        _srcref (zx/xml1-> loc (pref :sourceRef) zip/node)
+        _targref (zx/xml1-> loc (pref :targetRef) zip/node)
+        _assigns (zx/xml-> loc :assignment zip/node)]
+    (conj
+     {:tag _tag
+      :attrs (conj {:dtype :association}
+                   {:source (:content _srcref)}
+                   {:target (:content _targref)})}
+     (if (empty? _assigns)
+       {:content nil}
+       {:content [{:tag :assignments
+                   :attrs nil
+                   :content [_assigns]}]}
+       ))))
 
-(defn- activity-loops
-  "Currently just the attributes of the node. BPMN 2.0 declares that conformance
-  includes expressions, events, inputs and outputs"
-  [tnode]
-  (mapv #(conj (:attrs %) {:type (:tag  %)})
-        (zx/xml-> tnode (ptags= loop-types) zip/node)))
 
-(defn- activity-definition
-  "Retreives potential owners (resources) of task"
-  [tnode proot]
-  (let [_mp (type-data-definition tnode proot)
-        _mp (assoc _mp :owner-resource
-                      (mapv #(:ref (dtype (zx/xml1-> % (pf :resourceRef) zx/text)))
-                            (zx/xml-> tnode (pf :potentialOwner))))
-        _mp (assoc _mp :loop (activity-loops tnode))
-        _mp (assoc _mp :script (zx/xml1-> tnode (pf :script) zx/text))]
-    _mp))
+(defn- item-aware-block
+  "Returns a map for node, simplifying reference information and
+  extending to include :data-grp derived from input/output associations"
+  [loc & [tag base]]
+  (let [_node  (zip/node loc)
+        _keyw  (:ref (nsref (str (:tag _node))))
+        _typew (pref (keyword (str _keyw "Association")))
+        _base  (tagblock _node  tag)
+        _assoc (mapv association (zx/xml-> (or base (zip/up loc)) _typew))
+        _aflag (if (empty? _assoc) nil )]
+    (assoc _base
+      :attrs (assoc (update-in (set/rename-keys (:attrs _base)
+                                                {:itemSubjectRef :item-ref})
+                               [:item-ref]  (comp :ref nsref))
+               :dtype ((keyword _keyw) data-btype))
+      :content (if (empty? _assoc) nil _assoc)
+      )))
 
-(defn- boundary-task-definition
-  [tnode proot f]
-  (assoc (f tnode proot) :event-refs
-    (mapv #(:id (:attrs %))
-          (zx/xml-> proot (pf :boundaryEvent)
-                    (zx/attr= :attachedToRef ((comp :id :attrs zip/node) tnode))
-                    zip/node))))
+(defn- iocontrol-aware-block
+  "Returns a map for node, simplifying reference information and
+  extending to include :data-grp derived from input/output associations"
+  [loc & [tag]]
+  (item-aware-block loc tag (zip/up (zip/up loc))))
 
-(declare process-def)
-
-(defn- subprocess-definition
-  [tnode proot]
-  (assoc (boundary-task-definition tnode proot activity-definition)
-    :context [(process-def tnode)]))
 
 (def ^:private evdefs [:messageEventDefinition :timerEventDefinition
-                       :cancelEventDefinition :compensationEventDefinition
+                       :cancelEventDefinition :compensateEventDefinition
                        :conditionalEventDefinition :errorEventDefinition
                        :escalationEventDefinition :linkEventDefinition
                        :signalEventDefinition :terminateEventDefinition])
-(defn- event-definition
-  [tnode proot]
-  (let [_mp (type-data-definition tnode proot)
-        _ev (filter #(some? (some #{(kw-to-refkw (:tag %))} evdefs))
-                    (zip/children tnode))]
-    (assoc _mp :event-def (mapv #(conj (:attrs %) {:type (:tag %)}) _ev))))
 
-(defn- finish-node
-  [node node-type proot]
-  (condp = (kw-to-refkw node-type)
-    :startEvent             (event-definition node proot)
-    :endEvent               (event-definition node proot)
-    :boundaryEvent          (event-definition node proot)
-    :intermediateThrowEvent (event-definition node proot)
-    :intermediateCatchEvent (event-definition node proot)
-
-    :task             (boundary-task-definition node proot activity-definition)
-    :userTask         (boundary-task-definition node proot activity-definition)
-    :scriptTask       (boundary-task-definition node proot activity-definition)
-    :sendTask         (boundary-task-definition node proot activity-definition)
-    :receiveTask      (boundary-task-definition node proot activity-definition)
-    :serviceTask      (boundary-task-definition node proot activity-definition)
-    :callActivity     (boundary-task-definition node proot type-data-definition)
-
-    :subProcess       (subprocess-definition node proot)
+; adds (additional information handling) tuple identify additional semantics of
+; a node that should be captured in base nodes content such that each add tuple
+; [0 keyword
+;  1 nil or individual item handler (nil is default and uses the tagblock function)
+;  2 zx/xml-> selector extensions]
+;
+; grps (groups) tuples identify grouping of addition information on the node
+; in focus such that the group tuple that is dispatched vis-a-vis
+; (% loc)
+; e.g.
+; {:dtype :foo
+;   :adds nil
+;   :grps [#(nodegroup % [:data-group
+;                       nil
+;                       #(item-aware-block % :data)
+;                       (pref :dataOutput)])
+;          #(...)]
+;          }
 
 
+(declare process-node-grp nodegroup)
 
-    :exclusiveGateway  (type-data-definition node proot)
-    :parallelGateway   (type-data-definition node proot)
-    :inclusiveGateway  (type-data-definition node proot)
-    :eventBasedGateway (type-data-definition node proot)
+(def ^:private event
+  {:dtype :event
+   :adds nil
+   :grps [#(nodegroup % [:data
+                       nil
+                       (fn [loc] (item-aware-block loc :data))
+                       (pref :dataOutput)])
+          #(nodegroup % [:definition
+                      nil
+                      (comp tagblockwc zip/node)
+                      (apply ptags= evdefs)])]
+          })
 
-    (throw (Exception. (str "Unhandled node-type " node-type)))
-    ))
+(def ^:private gateway
+  {:dtype :gateway
+   :adds nil
+   :grps nil})
 
-(defn- node-include?
-  [node]
-  ((complement some?)
-   (some (conj #{} (kw-to-refkw (:tag node))) node-ex)))
+(def ^:private activity
+  {:dtype :activity
+   :adds [[:loop #(tagblockmap % {:dtype :loop})
+           (ptags= :multiInstanceLoopCharacteristics
+                   :standardLoopCharacteristics) zip/node]]
+   :grps [#(nodegroup %
+           [:data
+            nil
+            (fn [loc] (iocontrol-aware-block loc :data))
+           (pref :ioSpecification)  (ptags= :dataInput :dataOutput)])
+           ]})
 
-(defn- gbyid
-  "Returns the single element of type tagkw with attribute id = idref"
-  [root tagkw idref]
-  (zx/xml1-> root tagkw (zx/attr= :id idref)))
+(def ^:private script
+  (update-in activity [:adds] conj
+             [:script #(tagblockwc % :script) (pref :script) zip/node]))
 
-(defn- nodes-only
-  [proot]
-  (mapv #(conj (assoc (:attrs %) :type (:tag %) )
-               (finish-node (gbyid proot (:tag %) (:id (:attrs %))) (:tag %) proot))
-        (filter node-include? (zip/children proot))))
+(def ^:private usertask
+  (update-in activity [:adds] conj
+             [:owner #(tagblockwc % :owner)
+              (pref :potentialOwner) (pref :resourceRef) zip/node]))
 
+(def ^:private subprocess
+  {:dtype :subprocess
+   :adds nil
+   :grps [
+          #(nodegroup % [:data
+                       nil
+                       (fn [loc] (iocontrol-aware-block loc :data))
+                       (pref :ioSpecification)  (ptags= :dataInput :dataOutput)])
+          #(process-node-grp %)
+          ]})
+
+(def ^:private
+  supported {:startEvent                 event
+             :boundaryEvent              event
+             :intermediateCatchEvent     event
+             :endEvent                   event
+             :intermediateThrowEvent     event
+             :implicitThrowEvent         event
+
+             :task                       activity
+             :userTask                   usertask
+             :scriptTask                 script
+             :sendTask                   activity
+             :receiveTask                activity
+             :serviceTask                activity
+             :callActivity               activity
+
+             :subProcess                 subprocess
+
+             :exclusiveGateway           gateway
+             :parallelGateway            gateway
+             :inclusiveGateway           gateway
+             :eventBasedGateway          gateway
+             })
+
+
+(defn nodegroup
+  [loc & [[grpkw grouper handler & sel]]]
+  ((or grouper group-definition) (apply zx/xml-> loc sel) grpkw handler))
+
+(defn nodeadd
+  [loc & [[nodekw node-handler & sel]]]
+  (mapv (or node-handler #(tagblock (zip/node %) nodekw)) (apply zx/xml-> loc sel)))
+
+(defn nodeblock
+  "Parse and emit node information and associated groups.
+  The pbloc is derived directly from supported lookups or alength
+  function association"
+  [loc]
+  (let [_def   (zip/node loc)
+        _tag   (nskw2kw (:tag _def))
+        _pbloc (_tag supported)]
+    (assoc (assoc-in _def [:attrs :dtype] (:dtype _pbloc))
+      :tag     _tag
+      :content (or (vec (flatten (conj (mapv #(nodeadd loc %) (:adds _pbloc))
+                                       (mapv #(% loc) (:grps _pbloc))
+                                       ))) nil))))
+
+;; sequenceFlow parsing
+
+(def ^:dynamic ^:private *cycle* nil)
 
 (defn- is-visited?
   [node-id]
   (some? (some #{node-id} @*cycle*)))
 
-(declare step-def step-ref)
+(declare flow-step)
 
-(defn- step-helper
-  [tid proot nodes]
-  (let [_trg (tu/node-for-id tid nodes)
-        _hit (or (:event-refs _trg) [])
-        _hit (or (first _hit) false)]
-    (if _hit
-      (do
-        [{:seq-name "" :sequence :step
-        :node (select-keys _trg [:id :type :name])
-        :predicates [:none]
-        :next (step-def _hit proot nodes)
-        }]
-        )
-      (step-def tid proot nodes))))
+(defn- make-sequence
+  [node & [content flowseq constraints]]
+  {:tag :sequence
+   :attrs {:dtype :execute
+           :seq-id (:id (:attrs flowseq)) :seq-name (:name (:attrs flowseq))
+           :predicates [constraints]
+           :node-id (:id (:attrs node )) :node-tag (:tag node)
+           }
+   :content content}
+  )
 
-(defn- step-ref
-  "Step definition helper"
-  [sqref proot nodes]
-  (let [_sqnode  (zip/node sqref)
-        _node    (tu/node-for-id (:sourceRef (:attrs  _sqnode)) nodes)
-        _idsmap  (set/rename-keys
-                  (select-keys (:attrs _sqnode) [:targetRef :name])
-                  {:targetRef :next :name :seq-name})
-        _stptype  {:node (select-keys _node [:id :type :name])
-                   :sequence :step}
-        _conddref (zx/xml1-> sqref (pf :conditionExpression) zx/text)
-        _conds    {:predicates
-                   [(cond (or (nil? _conddref) (= _conddref "")) :none
-                          :else _conddref)]}
-        ]
-    (conj _idsmap _stptype _conds
-          {:next (step-helper (:next _idsmap) proot nodes)})))
+(defn- flow-helper
+  [seqrf proot]
+  (into [] (flatten (map #(flow-step % proot)
+                         (conj (zx/xml-> *nodes* :boundaryEvent
+                                         (zx/attr= :attachedToRef (zx/attr seqrf :sourceRef))
+                                         (zx/attr :id))
+                               (zx/attr seqrf :targetRef))))))
 
-(defn- step-def
-  "Head parse for sequenceFlow"
-  [srcid proot nodes]
-  (let [_sx (zx/xml-> proot (pf :sequenceFlow) (zx/attr= :sourceRef srcid))
-        _iv (or (is-visited? srcid) false)
-        _n0 (tu/node-for-id srcid nodes)]
-    ;(println "Processing " srcid " in visitors " _iv " empty " (empty? _sx))
-    (if (empty? _sx)
-      [{:seq-name ""
-        :sequence :end
-        :node (select-keys _n0 [:id :type :name])
-        :next []
-        :predicates [:none]
-        }]
-      (if _iv
-        [{:seq-name ""
-          :sequence :jump
-          :node (select-keys _n0 [:id :type :name])
-          :next []
-          :predicates [:none]
-          }]
-        (do
-          (swap! *cycle* conj srcid)
-          (mapv #(step-ref % proot nodes) _sx))))))
+(defn- flow-noderef
+  [seqf proot node]
+  (let [_conddref (zx/xml1-> seqf (pref :conditionExpression) zx/text)]
+    (make-sequence node
+                   (flow-helper seqf proot)
+                   (zip/node seqf)
+                   (cond (or (nil? _conddref) (= _conddref "")) :none
+                                :else _conddref))))
+
+(defn- flow-step
+  [srcid proot]
+  (let [_seqf (zx/xml-> proot (pref :sequenceFlow) (zx/attr= :sourceRef srcid))
+        _node (zx/xml1-> *nodes* (tz/mtags= (keys supported))
+                         (zx/attr= :id srcid) zip/node)]
+    (cond
+     (= (:tag _node) :endEvent) (assoc-in (make-sequence _node) [:attrs :dtype] :end)
+     (is-visited? srcid) (assoc-in (make-sequence _node) [:attrs :dtype] :jump)
+     :else (do
+             (swap! *cycle* conj srcid)
+             (mapv #(flow-noderef % proot _node) _seqf)
+             )
+     )))
 
 ; TODO: In lane attributes, the partitionElementRef may be resource ref
 ; need to either rename or ignore/drop from returns
 
-(defn- node-driver
-  [proot nodes]
+(defn- process-flow
+  "Parses the sequence flow from source and structures
+  the execution path tree"
+  [proot]
   (binding [*cycle* (atom [])]
-    (let [_se (map :id (tu/nodes-for-type (pf :startEvent) nodes))
-          _fe (first (map #(step-def % proot nodes) _se))]
+    (let [_start (zx/xml-> *nodes* :startEvent (zx/attr :id))]
       (reset! *cycle* [])
-    _fe)))
+      {:tag :group
+                  :attrs {:count (count _start) :dtype :sequence}
+                  :content (vec (flatten (reduce conj (mapv #(flow-step % proot) _start))))
+                  }))
+  )
 
+(defn- process-data-grp
+  "Combines the iocontrol-aware-block and item-aware-block information for
+  process only, all other are defined in node handling"
+  [loc & tail]
+  (let [_ioc  (mapv (comp tagblock zip/node)
+                    (zx/xml-> loc (pref :ioSpecification) (ptags= :dataInput :dataOutput)))
+        _data (mapv #(item-aware-block % :data) (zx/xml-> loc (pref :dataObject)))
+        _cnt (reduce conj _data _ioc)]
+    {:tag :group
+     :attrs {:count (count _cnt) :dtype :data}
+     :content _cnt})
+  )
 
-(defn- process-lane
-  [lane]
-  (let [_at (:attrs (zip/node lane))]
-    (assoc _at :node-refs
-      (into [] (zx/xml-> lane (pf :flowNodeRef) zx/text)))))
-
-(defn- process-lanesets
-  [laneset]
-  (let [_at (:attrs (zip/node laneset))]
-    (assoc _at :flow-refs (mapv process-lane (zx/xml-> laneset (pf :lane))))))
+(defn- process-node-grp
+  [proot & tail]
+  (group-definition (zx/xml-> proot (apply ptags= (keys supported)))
+                                 :node nodeblock))
 
 (defn- process-def
   "Parse the process data, nodes and steps"
   [proot]
-  (let [_nodedefs (nodes-only proot)
-        _pn (assoc (:attrs (zip/node proot))
-              :process-data (data-iospec proot proot)
-              :process-object-refs (mapv (comp :attrs zip/node )
-                                          (zx/xml-> proot (pf :dataObject)))
-              :process-store-refs (mapv (comp :attrs zip/node)
-                                    (zx/xml-> proot (pf :dataStoreReference)))
-              :process-flows (node-driver proot _nodedefs)
-              :process-nodes _nodedefs
-              :process-flow-refs (mapv process-lanesets
-                                       (zx/xml-> proot (pf :laneSet))))]
-    _pn))
+  (binding [*nodes* (zip/xml-zip (process-node-grp proot))]
+    (assoc (tagblock (zip/node proot)) :content
+              [
+               (process-data-grp proot)
+               (group-definition  (zx/xml-> proot (pref :dataStoreReference))
+                               :store (comp tagblock zip/node))
+               (process-flow proot)
+               (zip/node *nodes*)
+               ])))
 
-(defn- interface-op
-  [op]
-  (assoc (:attrs (zip/node op)) :messages
-             (mapv #(assoc {} :msg-id %)
-                   (zx/xml-> op (pf :inMessageRef) zx/text))))
+(defn- operations
+  [ifacez ifaceref]
+  (let [_ops (mapv #(assoc (tagblock %) :content (:content %))
+                   (zx/xml-> ifacez (pref :operation) zip/node))]
+    (assoc-in ifaceref [:content] _ops)))
 
-(defn- interface-def
-  [ifaceref]
-  (let [_at (set/rename-keys (:attrs (zip/node ifaceref))
-                     {:implementationRef :implementation})
-        _at (assoc _at :implementation (dtype (:implementation _at)))
-        ]
-    (assoc _at :operations (mapv interface-op (zx/xml-> ifaceref (pf :operation))))))
-
-(defn- items
-  [itmdef]
-  (let [_at (conj {:isCollection "false"} ((comp :attrs zip/node) itmdef))]
-    (assoc _at :structureRef (dtype (:structureRef _at))
-                :isCollection (symbol (:isCollection _at)))))
+; TODO: Import statement handling (content of itemDefinition)
 
 (defn- process-context
-  "For each process, parse a process definition context"
+  "Parses the definition context and then recurses down
+  to each process and subprocess definition"
   []
-  (let [_cntx (assoc {} :definition (:attrs (zip/node *zip*)))
-        _cntx (assoc-in _cntx [:data-stores]
-                        (mapv (comp :attrs zip/node)
-                              (zx/xml-> *zip* (pf :dataStore))))
-        _cntx (assoc-in _cntx [:processes]
-                        (mapv process-def (zx/xml-> *zip* (pf :process))))
-        _cntx (assoc-in _cntx [:interfaces]
-                        (mapv interface-def (zx/xml-> *zip* (pf :interface))))
-        _cntx (assoc-in _cntx [:resources]
-                        (mapv #(:attrs (zip/node %))
-                              (zx/xml-> *zip* (pf :resource))))
-        _cntx (assoc-in _cntx [:messages]
-                        (mapv #(:attrs (zip/node %))
-                              (zx/xml-> *zip* (pf :message))))
-        _cntx (assoc-in _cntx [:items]
-                        (mapv items (zx/xml-> *zip* (pf :itemDefinition))))]
-    _cntx))
+  [(group-definition (zx/xml-> *zip* (pref :message)) :message
+                     (comp tagblock zip/node))
+   (group-definition (zx/xml-> *zip* (pref :resource)) :resource
+                     (comp tagblock zip/node))
+   (group-definition (zx/xml-> *zip* (pref :dataStore)) :store
+                     #(tagblock (zip/node %) :store))
+   (group-definition (zx/xml-> *zip* (pref :itemDefinition)) :item
+                     #(tagblock (zip/node %) :item))
+   (group-definition (zx/xml-> *zip* (pref :interface)) :interface
+                     #(operations % (tagblock (zip/node %))))
+   (group-definition (zx/xml-> *zip* (pref :process)) :process process-def)])
 
 (defn context
-  "Takes a parse block and returns process contexts"
+  "Takes a parse block and returns process context, wrapping all elements in
+  the {:tag :attrs :content}
+  format"
   [parse-block]
   (binding [*zip* (:zip parse-block)
             *prefix* (:ns parse-block)]
-    (process-context)))
+    (assoc {:tag :context
+            :attrs (:attrs (zip/node *zip*))
+           } :content (process-context))))
