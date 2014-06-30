@@ -79,27 +79,83 @@ nil
 #'s0
 
 => (pprint (:attrs s0))
-{:targetNamespace "http://fox.camunda.com/model/98a0678d9e194de9b3d9284886c3",
- :name "Incident Management",
- :typeLanguage "http://jcp.org/en/jsr/detail?id=270",
- :expressionLanguage "http://www.jcp.org/en/jsr/detail?id=245",
+{:id "_1276276944297",
+ :targetNamespace "http://www.trisotech.com/definitions/_1276276944297",
  :xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance",
- :xmlns "http://www.omg.org/spec/BPMN/20100524/MODEL",
- :xmlns:dc "http://www.omg.org/spec/DD/20100524/DC",
- :xmlns:tns "http://fox.camunda.com/model/98a0678d9e194de9b3d9284886c3",
- :xmlns:java "http://jcp.org/en/jsr/detail?id=270",
- :id "_98a0678d9e194de9b3d9284886c3",
  :xmlns:di "http://www.omg.org/spec/DD/20100524/DI",
- :xmlns:bpmndi "http://www.omg.org/spec/BPMN/20100524/DI"}
-
-=> (pprint (keys t0))
-(:definition :data-stores :items :messages :resources :interfaces :processes)
-
+ :xmlns:bpmndi "http://www.omg.org/spec/BPMN/20100524/DI",
+ :xmlns:dc "http://www.omg.org/spec/DD/20100524/DC",
+ :xmlns:semantic "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 ````
-***Anatomy*** - Context highlevel and lower level maps described (key orders manually edited for readability)
+#####Anatomy
+
+The tributary context returned from `context-from-source` is discused with examples.
+######Groups
+
+Groups are first class nodes and exists at a number of different levels. Below is an examples of the groups associated to the context and process nodes generated using the zipper root location and the `pretty-summary` function. During execution you would want to use the raw zipper calls (also shown) to use the information.
+
 
 ````clojure
-; See /dev/src/user.clj for some example results, navigation and  general usage
+(ns ^{:author "Frank V. Castelluci"
+      :doc "Development only sand-box"}
+  tributary.user
+  (:require [tributary.core :refer :all]
+            [tributary.tzip :as tz]
+            [clojure.zip :as zip]
+            [clojure.data.zip.xml :as zx]
+            [clojure.pprint :refer :all]
+   ))
+
+(def s0 (context-from-source
+     (-> "Nobel Prize Process.bpmn"
+     clojure.java.io/resource
+     clojure.java.io/file)))
+
+(def z0 (zip/xml-zip s0))
+
+; Context (root) summary
+
+==> (tz/pretty-summary z0 :ppred #(contains? #{:context} (:tag (zip/node %))))
+
+|    Scope | Count |      Group |
+|----------+-------+------------|
+| :context |    10 |   :message |
+| :context |     0 |  :resource |
+| :context |     4 |     :store |
+| :context |     0 |      :item |
+| :context |     0 | :interface |
+| :context |     4 |   :process |
+
+; Same using raw zipper
+==> (pprint (zx/xml-> _z0 :group (comp #(select-keys % [:dtype :count]) :attrs zip/node)))
+
+({:count 10, :dtype :message}
+ {:count 0, :dtype :resource}
+ {:count 4, :dtype :store}
+ {:count 0, :dtype :item}
+ {:count 0, :dtype :interface}
+ {:count 4, :dtype :process})
+
+; Process (in :process group) summary
+==> (tz/pretty-summary z0 :ppred #(contains? #{:process} (:tag (zip/node %))))
+
+|    Scope | Count |     Group |
+|----------+-------+-----------|
+| :process |     1 |     :data |
+| :process |     4 |    :store |
+| :process |     1 | :sequence |
+| :process |    13 |     :node |
+
+; Same using raw zipper
+
+==> (pprint (take 4 (zx/xml-> _z0 tz/groups :process :group
+      (comp #(select-keys % [:dtype :count]) :attrs zip/node) )))
+
+({:count 1,  :dtype :data}
+ {:count 4,  :dtype :store}
+ {:count 1,  :dtype :sequence}
+ {:count 13, :dtype :node})
+
 ````
 
 ### Context (XPDL - TBD but will borrow heavily from BPMN)
