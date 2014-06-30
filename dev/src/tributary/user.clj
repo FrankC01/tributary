@@ -13,11 +13,8 @@
                clojure.java.io/resource
                clojure.java.io/file)))
 
-  (pprint (:attrs _s0))
   (def _z0 (zip/xml-zip _s0))
 
-  (time (tz/pretty-summary _z0 :ppred #(contains? #{:process :context}
-                                        (:tag (zip/node %)))))
 
 ;--------------------------------------------
 (comment
@@ -79,5 +76,11 @@
   (time (tz/pretty-summary _z0 :ppred #(contains? #{:process :context}
                                         (:tag (zip/node %)))))
 
+  ; Same as above but more realistic for manipulation
+
+  (pprint (zx/xml-> _z0 :group (comp #(select-keys % [:dtype :count]) :attrs zip/node)))
+  (pprint (take 4 (zx/xml-> _z0 tz/groups :process :group
+                            (comp #(select-keys % [:dtype :count]) :attrs zip/node) )))
   )
+
 
