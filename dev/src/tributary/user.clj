@@ -3,25 +3,32 @@
   tributary.user
   (:require [tributary.core :refer :all]
             [tributary.tzip :as tz]
+            [tributary.utils :as tu]
             [clojure.zip :as zip]
             [clojure.data.zip.xml :as zx]
             [clojure.pprint :refer :all]
    ))
 
 
-  (def _s0 (context-from-source (-> "Nobel Prize Process.bpmn"
+
+  (def xpdl (context-from-source (-> "Simple Lanes.xpdl"
                clojure.java.io/resource
                clojure.java.io/file)))
 
-  (def _z0 (zip/xml-zip _s0))
+  (pprint xpdl)
+
+  (def xzip (zip/xml-zip xpdl))
+
+  ;(pprint (zx/xml-> xzip :group (zx/attr= :dtype :resource) zip/node))
+  (time (tz/pretty-summary xzip :ppred #(contains? #{:context :process}
+                                        (:tag (zip/node %)))))
 
 
 ;--------------------------------------------
 (comment
 
-  ; Verified sources
-
-  (def _s0 (context-from-source (-> "Incident Management.bpmn"
+  ; Verified BPMN sources
+  (def bpmn (context-from-source (-> "Incident Management.bpmn"
                clojure.java.io/resource
                clojure.java.io/file)))
   (def _s0 (context-from-source (-> "Nobel Prize Process.bpmn"
@@ -41,8 +48,16 @@
                clojure.java.io/file)))
 
   ; setup zipper
+  (def bzip (zip/xml-zip bpmn))
 
-  (def _z0 (zip/xml-zip _s0))
+  ; Verified XPDL sources
+
+  (def xpdl (context-from-source (-> "Simple Lanes.xpdl"
+               clojure.java.io/resource
+               clojure.java.io/file)))
+
+  ; setup zipper
+  (def xzip (zip/xml-zip xpdl))
 
   ; general data.zip.xml selector stuff
 

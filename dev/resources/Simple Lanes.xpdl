@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xpdl2:Package xmlns:xpdl2="http://www.wfmc.org/2004/XPDL2.0alpha" Id="_wsX3wEZVEduS4_t5Z4bCOg" Name="Pattern5">
+  <xpdl2:PackageHeader>
+    <xpdl2:XPDLVersion>2.0</xpdl2:XPDLVersion>
+    <xpdl2:Vendor>TIBCO</xpdl2:Vendor>
+    <xpdl2:Created>Sun Sep 17 16:06:36 BST 2006</xpdl2:Created>
+    <xpdl2:Documentation></xpdl2:Documentation>
+  </xpdl2:PackageHeader>
+  <xpdl2:RedefinableHeader PublicationStatus="UNDER_REVISION">
+    <xpdl2:Author>jbrunt</xpdl2:Author>
+    <xpdl2:Version>1.0</xpdl2:Version>
+  </xpdl2:RedefinableHeader>
+  <xpdl2:Pools>
+    <xpdl2:Pool Id="_4EXuIEZXEdupMM8Ja_2_Jw" Name="Pool" Process="_3YKIYEZXEdupMM8Ja_2_Jw">
+      <xpdl2:Lanes>
+        <xpdl2:Lane Id="_4EXuIUZXEdupMM8Ja_2_Jw" Name="Director">
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo Height="190.0" ToolId="XPD"/>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Lane>
+        <xpdl2:Lane Id="_Aj--wEZYEdupMM8Ja_2_Jw" Name="Manager">
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo BorderColor="0,0,128" FillColor="128,155,183" Height="176.0" ToolId="XPD"/>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Lane>
+      </xpdl2:Lanes>
+    </xpdl2:Pool>
+  </xpdl2:Pools>
+  <xpdl2:WorkflowProcesses>
+    <xpdl2:WorkflowProcess Id="_3YKIYEZXEdupMM8Ja_2_Jw" Name="Pattern5">
+      <xpdl2:ProcessHeader/>
+      <xpdl2:RedefinableHeader/>
+      <xpdl2:Participants>
+        <xpdl2:Participant Id="_qQdzkGbUEdy3AOXEXyq-Mw" Name="Manager">
+          <xpdl2:ParticipantType Type="ROLE"/>
+        </xpdl2:Participant>
+        <xpdl2:Participant Id="_sa8uIGbUEdy3AOXEXyq-Mw" Name="Director">
+          <xpdl2:ParticipantType Type="ROLE"/>
+        </xpdl2:Participant>
+      </xpdl2:Participants>
+      <xpdl2:DataFields>
+        <xpdl2:DataField Id="_dLvD4GbSEdyHW7N54Adirg" Name="Cost">
+          <xpdl2:DataType>
+            <xpdl2:BasicType Type="INTEGER">
+              <xpdl2:Precision>10</xpdl2:Precision>
+            </xpdl2:BasicType>
+          </xpdl2:DataType>
+        </xpdl2:DataField>
+      </xpdl2:DataFields>
+      <xpdl2:Activities>
+        <xpdl2:Activity Id="__NvkkEZXEdupMM8Ja_2_Jw" Name="Approve Manager">
+          <xpdl2:Implementation>
+            <xpdl2:Task/>
+          </xpdl2:Implementation>
+          <xpdl2:Performers>
+            <xpdl2:Performer>_qQdzkGbUEdy3AOXEXyq-Mw</xpdl2:Performer>
+          </xpdl2:Performers>
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo BorderColor="0,0,128" FillColor="255,219,74" Height="64.0" LaneId="_Aj--wEZYEdupMM8Ja_2_Jw" ToolId="XPD" Width="96.0">
+              <xpdl2:Coordinates XCoordinate="169.0" YCoordinate="87.0"/>
+            </xpdl2:NodeGraphicsInfo>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Activity>
+        <xpdl2:Activity Id="__NvkkUZXEdupMM8Ja_2_Jw">
+          <xpdl2:Route GatewayType="XOR"/>
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo BorderColor="0,0,128" FillColor="255,219,74" Height="45.0" LaneId="_Aj--wEZYEdupMM8Ja_2_Jw" ToolId="XPD" Width="43.0">
+              <xpdl2:Coordinates XCoordinate="382.0" YCoordinate="86.0"/>
+            </xpdl2:NodeGraphicsInfo>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Activity>
+        <xpdl2:Activity Id="__NvkkkZXEdupMM8Ja_2_Jw" Name="Approve Director">
+          <xpdl2:Implementation>
+            <xpdl2:Task/>
+          </xpdl2:Implementation>
+          <xpdl2:Performers>
+            <xpdl2:Performer>_sa8uIGbUEdy3AOXEXyq-Mw</xpdl2:Performer>
+          </xpdl2:Performers>
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo BorderColor="0,0,128" FillColor="255,219,74" Height="64.0" LaneId="_4EXuIUZXEdupMM8Ja_2_Jw" ToolId="XPD" Width="96.0">
+              <xpdl2:Coordinates XCoordinate="169.0" YCoordinate="126.5"/>
+            </xpdl2:NodeGraphicsInfo>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Activity>
+        <xpdl2:Activity Id="__Nvkk0ZXEdupMM8Ja_2_Jw" Name="Start">
+          <xpdl2:Event>
+            <xpdl2:StartEvent/>
+          </xpdl2:Event>
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo BorderColor="0,0,128" FillColor="255,219,74" Height="44.0" LaneId="_4EXuIUZXEdupMM8Ja_2_Jw" ToolId="XPD" Width="30.0">
+              <xpdl2:Coordinates XCoordinate="34.0" YCoordinate="24.0"/>
+            </xpdl2:NodeGraphicsInfo>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Activity>
+        <xpdl2:Activity Id="__NvklEZXEdupMM8Ja_2_Jw">
+          <xpdl2:Route GatewayType="XOR"/>
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo BorderColor="0,0,128" FillColor="255,219,74" Height="45.0" LaneId="_4EXuIUZXEdupMM8Ja_2_Jw" ToolId="XPD" Width="43.0">
+              <xpdl2:Coordinates XCoordinate="33.0" YCoordinate="125.0"/>
+            </xpdl2:NodeGraphicsInfo>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Activity>
+        <xpdl2:Activity Id="__NvklUZXEdupMM8Ja_2_Jw" Name="End">
+          <xpdl2:Event>
+            <xpdl2:EndEvent/>
+          </xpdl2:Event>
+          <xpdl2:NodeGraphicsInfos>
+            <xpdl2:NodeGraphicsInfo BorderColor="0,0,128" FillColor="255,219,74" Height="44.0" LaneId="_Aj--wEZYEdupMM8Ja_2_Jw" ToolId="XPD" Width="30.0">
+              <xpdl2:Coordinates XCoordinate="502.0" YCoordinate="87.0"/>
+            </xpdl2:NodeGraphicsInfo>
+          </xpdl2:NodeGraphicsInfos>
+        </xpdl2:Activity>
+      </xpdl2:Activities>
+      <xpdl2:Transitions>
+        <xpdl2:Transition Id="__NvklkZXEdupMM8Ja_2_Jw" Name="Arrow 1" From="__Nvkk0ZXEdupMM8Ja_2_Jw" To="__NvklEZXEdupMM8Ja_2_Jw"/>
+        <xpdl2:Transition Id="__Nvkl0ZXEdupMM8Ja_2_Jw" Name="cost > 5000" From="__NvklEZXEdupMM8Ja_2_Jw" To="__NvkkkZXEdupMM8Ja_2_Jw">
+          <xpdl2:Condition Type="CONDITION"><xpdl2:Expression ScriptGrammar="Text">Cost > 5000;</xpdl2:Expression></xpdl2:Condition>
+          <xpdl2:ConnectorGraphicsInfos>
+            <xpdl2:ConnectorGraphicsInfo BorderColor="0,0,128" ToolId="XPD"/>
+          </xpdl2:ConnectorGraphicsInfos>
+        </xpdl2:Transition>
+        <xpdl2:Transition Id="__NvkmEZXEdupMM8Ja_2_Jw" Name="cost &lt; 5000" From="__NvklEZXEdupMM8Ja_2_Jw" To="__NvkkEZXEdupMM8Ja_2_Jw">
+          <xpdl2:Condition Type="CONDITION"><xpdl2:Expression ScriptGrammar="Text">Cost>5000;</xpdl2:Expression></xpdl2:Condition>
+          <xpdl2:ConnectorGraphicsInfos>
+            <xpdl2:ConnectorGraphicsInfo ToolId="XPD.EndAnchorPosition">
+              <xpdl2:Coordinates XCoordinate="58.12500000000001" YCoordinate="0.0"/>
+            </xpdl2:ConnectorGraphicsInfo>
+            <xpdl2:ConnectorGraphicsInfo BorderColor="0,0,128" ToolId="XPD"/>
+          </xpdl2:ConnectorGraphicsInfos>
+        </xpdl2:Transition>
+        <xpdl2:Transition Id="__NvkmUZXEdupMM8Ja_2_Jw" Name="Approved Director" From="__NvkkkZXEdupMM8Ja_2_Jw" To="__NvkkUZXEdupMM8Ja_2_Jw">
+          <xpdl2:ConnectorGraphicsInfos>
+            <xpdl2:ConnectorGraphicsInfo ToolId="XPD.StartAnchorPosition">
+              <xpdl2:Coordinates XCoordinate="9.0625" YCoordinate="0.0"/>
+            </xpdl2:ConnectorGraphicsInfo>
+          </xpdl2:ConnectorGraphicsInfos>
+        </xpdl2:Transition>
+        <xpdl2:Transition Id="__NvkmkZXEdupMM8Ja_2_Jw" Name="Approved Manager" From="__NvkkEZXEdupMM8Ja_2_Jw" To="__NvkkUZXEdupMM8Ja_2_Jw">
+          <xpdl2:ConnectorGraphicsInfos>
+            <xpdl2:ConnectorGraphicsInfo ToolId="XPD.StartAnchorPosition">
+              <xpdl2:Coordinates XCoordinate="10.0" YCoordinate="0.0"/>
+            </xpdl2:ConnectorGraphicsInfo>
+          </xpdl2:ConnectorGraphicsInfos>
+        </xpdl2:Transition>
+        <xpdl2:Transition Id="__Nvkm0ZXEdupMM8Ja_2_Jw" Name="To End" From="__NvkkUZXEdupMM8Ja_2_Jw" To="__NvklUZXEdupMM8Ja_2_Jw"/>
+      </xpdl2:Transitions>
+    </xpdl2:WorkflowProcess>
+  </xpdl2:WorkflowProcesses>
+  <xpdl2:ExtendedAttributes>
+    <xpdl2:ExtendedAttribute Name="CreatedBy" Value="TIBCO Business Studio 1.0.0"/>
+    <xpdl2:ExtendedAttribute Name="FormatVersion" Value="1"/>
+  </xpdl2:ExtendedAttributes>
+</xpdl2:Package>
