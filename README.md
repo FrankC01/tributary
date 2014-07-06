@@ -14,8 +14,8 @@ First thoughts are to establish a context by which analyzers and execution may o
 | -------: | :----------- |
 |~~0.1.2-SNAPSHOT (Complete)~~  | ~~BPMN Parse (rich type handling), expect refactoring~~ |
 | 0.1.3-SNAPSHOT (Current)   | XPDL initial foray, expect refactoring |
-| 0.1.4-SNAPSHOT   | XPDL Parse (limited type handling), expect refactoring |
-| 0.1.5-SNAPSHOT   | XPDL Parse (rich type handling), expect refactoring |
+| 0.1.4-SNAPSHOT   | XPDL Parse (rich type handling), expect refactoring |
+| 0.1.5-SNAPSHOT   | Normalize data model |
 | 0.2.0            | First Release - add quality, richness and features |
 
 
@@ -47,8 +47,8 @@ ___Parse source and generate a context___
 ; Parsing in the XPDL source
 ; In our test fixture we use
 
-(def s0 (context-from-source
-  (-> "Simple Lanes.xpdl"
+(def xpdl (context-from-source
+  (-> "HealthCare WF.xpdl"
       clojure.java.io/resource
       clojure.java.io/file)))
 
@@ -72,20 +72,21 @@ The context forms the data DSL for consumption and is the product of `context-fr
 => (use 'clojure.pprint)
 nil
 
-=> (def s0 (context-from-source
-     (-> "Simple Lanes.xpdl"
+=> (def xpdl (context-from-source
+     (-> "HealthCare WF.xpdl"
      clojure.java.io/resource
      clojure.java.io/file)))
-#'s0
+#'xpdl
 
-=> (pprint (:attrs s0))
-{:id "_1276276944297",
- :targetNamespace "http://www.trisotech.com/definitions/_1276276944297",
- :xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance",
- :xmlns:di "http://www.omg.org/spec/DD/20100524/DI",
- :xmlns:bpmndi "http://www.omg.org/spec/BPMN/20100524/DI",
- :xmlns:dc "http://www.omg.org/spec/DD/20100524/DC",
- :xmlns:semantic "http://www.omg.org/spec/BPMN/20100524/MODEL"}
+=> (pprint (:attrs xpdl))
+{:schemalocation "http://www.wfmc.org/2008/XPDL2.1 http://www.wfmc.org/standards/docs/bpmnxpdl_31.xsd",
+ :id "tf002",
+ :xsi "http://www.w3.org/2001/XMLSchema-instance",
+ :xmlns "http://www.wfmc.org/2008/XPDL2.1",
+ :xpdl "http://www.wfmc.org/2008/XPDL2.1",
+ :created "2009-02-25 07:50:07",
+ :vendor "Together",
+ :xpdlversion "1.0"}
 ````
 #####Anatomy
 
@@ -97,64 +98,74 @@ Groups are first class nodes and exists at a number of different levels. Below i
 
 ````clojure
 (ns ^{:author "Frank V. Castelluci"
-      :doc "Development only sand-box"}
+      :doc "Development only spikes"}
   tributary.user
   (:require [tributary.core :refer :all]
             [tributary.tzip :as tz]
+            [tributary.utils :as tu]
             [clojure.zip :as zip]
             [clojure.data.zip.xml :as zx]
             [clojure.pprint :refer :all]
    ))
-
-(def s0 (context-from-source
-     (-> "Simple Lanes.xpdl"
+(def xpdl (context-from-source
+     (-> "HealthCare WF.xpdl"
      clojure.java.io/resource
      clojure.java.io/file)))
 
-(def z0 (zip/xml-zip s0))
+(def xzip (zip/xml-zip xpdl))
 
 ; Context (root) summary
 
-==> (tz/pretty-summary z0 :ppred #(contains? #{:context} (:tag (zip/node %))))
+==> (tz/pretty-summary xzip :ppred #(contains? #{:context} (:tag (zip/node %)))))
 
 |    Scope | Count |      Group |
 |----------+-------+------------|
-| :context |    10 |   :message |
 | :context |     0 |  :resource |
-| :context |     4 |     :store |
-| :context |     0 |      :item |
-| :context |     0 | :interface |
-| :context |     4 |   :process |
+| :context |    37 | :interface |
+| :context |     0 |   :message |
+| :context |     0 |     :store |
+| :context |    51 |      :item |
+| :context |    14 |   :process |
 
 ; Same using raw zipper
-==> (pprint (zx/xml-> _z0 :group (comp #(select-keys % [:dtype :count]) :attrs zip/node)))
+==> (pprint (zx/xml-> xzip :group (comp #(select-keys % [:dtype :count]) :attrs zip/node)))
 
-({:count 10, :dtype :message}
- {:count 0, :dtype :resource}
- {:count 4, :dtype :store}
- {:count 0, :dtype :item}
- {:count 0, :dtype :interface}
- {:count 4, :dtype :process})
+({:count 0,  :dtype :resource}
+ {:count 37, :dtype :interface}
+ {:count 0,  :dtype :message}
+ {:count 0,  :dtype :store}
+ {:count 51, :dtype :item}
+ {:count 14, :dtype :process})
 
-; Process (in :process group) summary
-==> (tz/pretty-summary z0 :ppred #(contains? #{:process} (:tag (zip/node %))))
+; Process (in :process group) sample summary
+==> (tz/pretty-summary xzip :ppred #(contains? #{:process} (:tag (zip/node %))))
 
-|    Scope | Count |     Group |
-|----------+-------+-----------|
-| :process |     1 |     :data |
-| :process |     4 |    :store |
-| :process |     1 | :sequence |
-| :process |    13 |     :node |
+|    Scope | Count |      Group |
+|----------+-------+------------|
+| :process |     0 |  :resource |
+| :process |     0 |      :data |
+| :process |     1 | :parameter |
+| :process |     1 |  :sequence |
+| :process |    21 |      :node |
 
-; Same using raw zipper
+|    Scope | Count |      Group |
+|----------+-------+------------|
+| :process |     0 |  :resource |
+| :process |     0 |      :data |
+| :process |     1 | :parameter |
+| :process |     1 |  :sequence |
+| :process |    10 |      :node |
 
-==> (pprint (take 4 (zx/xml-> _z0 tz/groups :process :group
+; Same using raw zipper sample
+
+==> (pprint (take 5 (zx/xml-> xzip tz/groups :process :group
       (comp #(select-keys % [:dtype :count]) :attrs zip/node) )))
 
-({:count 1,  :dtype :data}
- {:count 4,  :dtype :store}
+({:count 0,  :dtype :resource}
+ {:count 0,  :dtype :data}
+ {:count 1,  :dtype :parameter}
  {:count 1,  :dtype :sequence}
- {:count 13, :dtype :node})
+ {:count 21, :dtype :node})
 
 ````
 

@@ -11,18 +11,13 @@
 
 
 
-  (def xpdl (context-from-source (-> "Simple Lanes.xpdl"
+  (time (def xpdl (context-from-source (-> "HealthCare WF.xpdl"
                clojure.java.io/resource
-               clojure.java.io/file)))
-
-  (pprint xpdl)
+               clojure.java.io/file))))
 
   (def xzip (zip/xml-zip xpdl))
-
-  ;(pprint (zx/xml-> xzip :group (zx/attr= :dtype :resource) zip/node))
-  (time (tz/pretty-summary xzip :ppred #(contains? #{:context :process}
+  (time (tz/pretty-summary xzip :ppred #(contains? #{:context}
                                         (:tag (zip/node %)))))
-
 
 ;--------------------------------------------
 (comment
@@ -56,45 +51,59 @@
                clojure.java.io/resource
                clojure.java.io/file)))
 
+  (time (def xpdl (context-from-source (-> "HealthCare WF.xpdl"
+               clojure.java.io/resource
+               clojure.java.io/file))))
+
+
   ; setup zipper
   (def xzip (zip/xml-zip xpdl))
 
-  ; general data.zip.xml selector stuff
+  ; general data.zip.xml selector stuff for XPDL
 
-  (pprint (zx/xml-> _z0 :group (zx/attr= :dtype :message) zip/node))
-  (pprint (zx/xml-> _z0 :group (zx/attr= :dtype :item) zip/node))
-  (pprint (zx/xml-> _z0 :group (zx/attr= :dtype :store) zip/node))
-  (pprint (zx/xml-> _z0 :group (zx/attr= :dtype :resource) zip/node))
-  (pprint (zx/xml-> _z0 :group (zx/attr= :dtype :interface) zip/node))
-  (pprint (zx/xml-> _z0 :group (zx/attr= :dtype :process) zip/node))
+  (pprint (zx/xml-> xzip :group (zx/attr= :dtype :message) zip/node))
+  (pprint (zx/xml-> xzip :group (zx/attr= :dtype :item) zip/node))
+  (pprint (zx/xml-> xzip :group (zx/attr= :dtype :store) zip/node))
+  (pprint (zx/xml-> xzip :group (zx/attr= :dtype :resource) zip/node))
+  (pprint (zx/xml-> xzip :group (zx/attr= :dtype :interface) zip/node))
+  (pprint (zx/xml-> xzip :group (zx/attr= :dtype :process) zip/node))
 
   ; groups selectors in play
 
-  (pprint (count (zx/xml-> _z0 tz/groups :message)))
-  (pprint (count (zx/xml-> _z0 tz/groups :item)))
-  (pprint (count (zx/xml-> _z0 tz/groups :store)))
-  (pprint (count (zx/xml-> _z0 tz/groups :resource)))
-  (pprint (count (zx/xml-> _z0 tz/groups :interface)))
-  (pprint (count (zx/xml-> _z0 tz/groups :process)))
+  (pprint (count (zx/xml-> xzip tz/groups :message)))
+  (pprint (count (zx/xml-> xzip tz/groups :item)))
+  (pprint (count (zx/xml-> xzip tz/groups :store)))
+  (pprint (count (zx/xml-> xzip tz/groups :resource)))
+  (pprint (count (zx/xml-> xzip tz/groups :interface)))
+  (pprint (count (zx/xml-> xzip tz/groups :process)))
 
   ; cattr= selectors in play
 
-  (pprint (zx/xml-> _z0 tz/groups :process zip/node))
-  (pprint (zx/xml-> _z0 tz/groups :process (tz/cattr= :dtype :data) zip/node))
-  (pprint (zx/xml-> _z0 tz/groups :process (tz/cattr= :dtype :store) zip/node))
-  (pprint (zx/xml-> _z0 tz/groups :process (tz/cattr= :dtype :node) zip/node))
-  (pprint (zx/xml-> _z0 tz/groups :process (tz/cattr= :dtype :sequence) zip/node))
+  (pprint (zx/xml-> xzip tz/groups :process zip/node))
+  (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :resource) zip/node))
+  (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :parameter) zip/node))
+  (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :data) zip/node))
+  (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :store) zip/node))
+  (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :node) zip/node))
+  (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :sequence) zip/node))
+
+  ; Process activity nodes (XPDL)
+  (pprint (zx/xml-> xzip tz/groups
+                     :process
+                     (tz/cattr= :dtype :node)
+                    tz/children
+                    zip/node))
 
   ; pretty print group summary information
 
-  (time (tz/pretty-summary _z0))
-  (time (tz/pretty-summary _z0 :ppred #(contains? #{:process :context}
+  (time (tz/pretty-summary xzip))
+  (time (tz/pretty-summary xzip :ppred #(contains? #{:process :context}
                                         (:tag (zip/node %)))))
 
   ; Same as above but more realistic for manipulation
 
-  (pprint (zx/xml-> _z0 :group (comp #(select-keys % [:dtype :count]) :attrs zip/node)))
-  (pprint (take 4 (zx/xml-> _z0 tz/groups :process :group
+  (pprint (zx/xml-> xzip :group (comp #(select-keys % [:dtype :count]) :attrs zip/node)))
+  (pprint (take 4 (zx/xml-> xzip tz/groups :process :group
                             (comp #(select-keys % [:dtype :count]) :attrs zip/node) )))
   )
 
