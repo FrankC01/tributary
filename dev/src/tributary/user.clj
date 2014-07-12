@@ -11,13 +11,26 @@
 
 
 
-  (time (def xpdl (context-from-source (-> "HealthCare WF.xpdl"
+  (time (def xpdl (context-from-source (-> "Sample Messages.xpdl"
                clojure.java.io/resource
                clojure.java.io/file))))
 
   (def xzip (zip/xml-zip xpdl))
-  (time (tz/pretty-summary xzip :ppred #(contains? #{:context}
+  (pprint (zip/node xzip))
+
+  (time (tz/pretty-summary xzip :ppred #(contains? #{:context :process :subprocess}
                                         (:tag (zip/node %)))))
+
+
+;;   (pprint (:attrs xpdl))
+;;   (pprint (zx/xml-> xzip :group (zx/attr= :dtype :interface) zip/node))
+;;   (pprint (zx/xml-> xzip tz/groups
+;;                      :process
+;;                      (tz/cattr= :dtype :node)
+;;                     tz/children
+;;                     :subprocess
+;;                     zip/node))
+
 
 ;--------------------------------------------
 (comment
@@ -81,7 +94,6 @@
 
   (pprint (zx/xml-> xzip tz/groups :process zip/node))
   (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :resource) zip/node))
-  (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :parameter) zip/node))
   (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :data) zip/node))
   (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :store) zip/node))
   (pprint (zx/xml-> xzip tz/groups :process (tz/cattr= :dtype :node) zip/node))

@@ -12,6 +12,8 @@
 ;; Bindings
 (def ^:dynamic ^:private *nodes* nil)
 
+;; Forward declarations
+(declare process-def)
 
 (def ^:private
   tag-map {
@@ -19,95 +21,8 @@
            :StartEvent :startEvent
            :Task       :task
            :Tool       :call
-           :SubFlow      :subProcess
+           :SubFlow    :subProcess
            })
-
-(defn- route
-  [bloc rloc]
-  (tu/tagblockmap (zip/node bloc) {:dtype :gateway}
-               (condp (:GatewayType (:attrs (zip/node rloc)))
-                     "XOR" :exclusiveGateway)))
-
-(defn- event
-  [bloc eloc]
-  (tu/tagblockmap (zip/node bloc) {:dtype :event}
-               (-> eloc zip/down zip/node :tag tu/nskw2kw tag-map)))
-
-
-(defn- transition
-  [loc]
-  (assoc (update-in  (tu/tagblock (zip/node (zip/down loc))
-               ((comp tu/kwtolckw tu/nskw2kw :tag zip/node zip/down) loc))
-                     [:attrs] set/rename-keys {:Type :dtype})
-    :content (mapv (comp :Id :attrs)
-              (zx/xml-> loc zip/down (tu/pref :TransitionRefs) zip/children))
-  ))
-
-(defn- activity
-  [bloc]
-  (assoc (tu/tagblock (zip/node bloc) :activity)
-    :content
-    [(tu/group-definition
-      (zx/xml-> bloc (tu/pref :TransitionRestrictions)
-                (tu/pref :TransitionRestriction))
-      :transition transition)]))
-
-(defn- task
-  "Fundemental task parse"
-  [bloc]
-  (update-in
-   (update-in (activity bloc) [:attrs] merge {:dtype :task})
-   [:content] merge (map #(tu/tagblockwc % :owner)
-                         (zx/xml-> bloc (tu/pref :Performers) (tu/pref :Performer)
-                                   zip/node))))
-
-(defn- tool
-  [loc]
-  (update-in
-   (tu/map2lckws (assoc (tu/tagblock (zip/node loc) :invoke)
-                   :content (mapv
-                             (comp first :content)
-                             (zx/xml-> loc (tu/pref :ActualParameters)
-                                       (tu/pref :ActualParameter) zip/node))))
-   [:attrs] set/rename-keys {:type :dtype :id :appid}))
-
-
-(defn- modemap
-  [kw loc]
-  {kw (if (empty? loc)
-        nil
-   ((comp tu/nskw2kw :tag zip/node zip/down) loc))})
-
-(defn- call
-  "Parses activity application 'calls'"
-  [bloc iloc]
-  (let [_calls (tu/group-definition (zx/xml-> iloc (tu/pref :Task)
-                                              (tu/pref :TaskApplication))
-                                    :invoke
-                                    tool)
-        _base  (update-in (assoc (activity bloc) :tag :callActivity)
-                          [:attrs] conj {:dtype :call})]
-    (update-in _base [:content] conj _calls)))
-
-(defn- implementation
-  [bloc iloc]
-  (let [_kw (-> iloc zip/down zip/node :tag tu/nskw2kw)
-        _ikw (-> iloc zip/down zip/down zip/node :tag tu/nskw2kw)]
-    (if (= _ikw :TaskApplication)
-      (call bloc iloc)
-      (task bloc))))
-
-(def ^:private
-  trans {:Route            route
-         :Event            event
-         :Implementation   implementation
-         })
-
-(defn- node-type
-[loc]
-  (let [_base (zx/xml1-> loc (tu/ptags= :Route :Event :Implementation))
-        _btype (tu/nskw2kw (:tag (zip/node _base)))]
-    (update-in ((_btype trans) loc _base) [:attrs] tu/map2lckws)))
 
 (defn- with-data
   [loc tag]
@@ -123,6 +38,123 @@
                {:dtype (:Type (:attrs (zip/node _type)))
                 :precision _prec
                 })))
+
+(defn- transition
+  [loc]
+  (assoc (update-in  (tu/tagblock (zip/node (zip/down loc))
+               ((comp tu/kwtolckw tu/nskw2kw :tag zip/node zip/down) loc))
+                     [:attrs] set/rename-keys {:Type :dtype})
+    :content (mapv (comp :Id :attrs)
+              (zx/xml-> loc zip/down (tu/pref :TransitionRefs) zip/children))
+  ))
+
+(defn- activity
+  [bloc tag & [atmap]]
+  (assoc (tu/tagblockmap (zip/node bloc) (or atmap {:dtype :activity})
+                         (or tag :activity))
+    :content
+    [(tu/group-definition
+      (zx/xml-> bloc (tu/pref :TransitionRestrictions)
+                (tu/pref :TransitionRestriction))
+      :transition transition)]))
+
+
+(defn- route
+  [bloc rloc]
+  (let [_gtype (:GatewayType (:attrs (zip/node rloc)))]
+    (activity bloc
+              (cond
+               (= _gtype "XOR")       :exclusiveGateway
+               (= _gtype "Exclusive") :exclusiveGateway
+               (= _gtype "OR")        :inclusiveGateway
+               (= _gtype "Inclusive") :inclusiveGateway
+               (= _gtype "AND")       :parallelGateway
+               (= _gtype "Parallel")  :parallelGateway
+               (= _gtype "Complex")   :complexGateway
+               ) {:dtype :gateway})))
+
+(defn- event
+  [bloc eloc]
+  (activity bloc (-> eloc zip/down zip/node :tag tu/nskw2kw tag-map)
+            {:dtype :event}))
+
+(defn- task
+  "Fundemental task parse"
+  [bloc]
+  (update-in
+   (activity bloc :task)
+   [:content] #(vec (flatten (conj % (map (fn [rec] (tu/tagblockwc rec :owner))
+                         (zx/xml-> bloc (tu/pref :Performers) (tu/pref :Performer)
+                                   zip/node)))))))
+
+(defn- actualsbloc
+  "Parses actual parameters into content block"
+  [loc]
+  (tu/map2lckws (assoc (tu/tagblock (zip/node loc) :invoke)
+                  :content (mapv
+                            (comp first :content)
+                            (zx/xml-> loc (tu/pref :ActualParameters)
+                                      (tu/pref :ActualParameter) zip/node)))))
+
+(defn- subflow
+  [bloc iloc]
+  (update-in (activity bloc :subflow)
+             [:attrs] merge
+             (set/rename-keys (:attrs (zip/node (zip/down iloc))) {:Id :pid})))
+
+(defn- tool
+  [loc]
+  (update-in (actualsbloc loc)
+             [:attrs] set/rename-keys {:type :dtype :id :appid}))
+
+
+(defn- modemap
+  [kw loc]
+  {kw (if (empty? loc)
+        nil
+   ((comp tu/nskw2kw :tag zip/node zip/down) loc))})
+
+(defn- call
+  "Parses activity application 'calls'"
+  [bloc iloc]
+  (let [_calls (tu/group-definition (zx/xml-> iloc (tu/pref :Task)
+                                              (tu/pref :TaskApplication))
+                                    :invoke
+                                    tool)
+        _base  (activity bloc :callActivity {:dtype :call}) ]
+    (update-in _base [:content] conj _calls)))
+
+(defn- implementation
+  [bloc iloc]
+  (let [_kw (-> iloc zip/down zip/node :tag tu/nskw2kw)]
+    (cond
+     (and (= _kw :Task) (= (-> iloc zip/down zip/down zip/node :tag tu/nskw2kw)
+                           :TaskApplication)) (call bloc iloc)
+     (= _kw :SubFlow) (subflow bloc iloc)
+     :else (task bloc)
+     )))
+
+(defn- blockactivity
+  "Similar to BPMN subProcess than SubFlow"
+  [bloc iloc]
+  (let [_base (update-in (activity bloc :subprocess) [:attrs]
+             assoc  :encapsulated "true")]
+    (assoc _base :content []))
+  )
+
+(def ^:private
+  trans {:Route            route
+         :Event            event
+         :Implementation   implementation
+         :BlockActivity    blockactivity
+         })
+
+(defn- node-type
+  [loc]
+  (let [_base (zx/xml1-> loc (tu/ptags= :Route :Event :Implementation :BlockActivity))
+        _btype (tu/nskw2kw (:tag (zip/node _base)))]
+    (update-in ((_btype trans) loc _base) [:attrs] tu/map2lckws)))
+
 
 (defn- process-node-grp
   [proot & tail]
@@ -194,44 +226,58 @@
       {:tag :group
                   :attrs {:count (count _start) :dtype :sequence}
                   :content (vec (flatten (reduce conj (mapv #(flow-step % _troot) _start))))
-;                  :content (mapv #(flow-step % _troot) _start)
                   }))
   )
 
 ;; Resource
+
+(defn- resource
+  "Parse a participant as a :resource, including it's type"
+  [loc]
+  (update-in (tu/tagblock (zip/node loc) :resource)
+   [:attrs] assoc :resource-type
+             (zx/xml1-> loc (tu/pref :ParticipantType) (zx/attr :Type))))
 
 (defn- resources
   [proot]
   (tu/group-definition
    (zx/xml-> proot (tu/pref :Participants) (tu/pref :Participant))
    :resource
-   (comp tu/map2lckws #(tu/tagblock % :resource) zip/node)))
+   (comp tu/map2lckws resource)))
 
 
-(defn- paramaters
+(defn- parameters
+  "Returns a data group based on FormalParameters"
   [loc]
   (tu/group-definition (zx/xml-> loc (tu/pref :FormalParameters)
                                     (tu/pref :FormalParameter))
-                          :parameter
+                          :data
                           (comp tu/map2lckws
-                                #(with-data % :parameter))))
+                                #(with-data % :data))))
+
 ;; Process
 
 (defn- process-def
-  [proot]
+  "WorkflowProcess and ActivitySet parse. ActivitySet is considered a :subProcess of
+  the WorkflowProcess declaring it."
+  [proot & [tag]]
   (binding [*nodes* (zip/xml-zip (process-node-grp proot))]
-    (assoc (tu/map2lckws (tu/tagblock (zip/node proot)  :process))
+    (assoc (tu/map2lckws (tu/tagblock (zip/node proot) (or tag :process)))
       :content
       [
        (resources proot)
        (tu/group-definition
-        (zx/xml-> proot (tu/pref :DataFields) (tu/pref :DataField))
+        (zx/xml-> proot (tu/pref :ActivitySets) (tu/pref :ActivitySet))
+        :subprocess
+        #(process-def % :subprocess))
+       (tu/group-definition
+        (zx/xml-> proot (tu/ptags= :DataFields :FormalParameters)
+                  (tu/ptags= :DataField :FormalParameter))
         :data (comp tu/map2lckws #(with-data % :data)))
-       (paramaters proot)
        ;(process-data-grp proot)
        ;(tu/group-definition  (zx/xml-> proot (tu/pref :dataStoreReference))
        ;                      :store (comp tu/tagblock zip/node))
-       (process-flow proot)
+       #_(process-flow proot)
        (zip/node *nodes*)
        ])))
 
@@ -241,7 +287,7 @@
   [loc]
   (assoc (tu/map2lckws (tu/tagblock (zip/node loc) :interface))
     :content
-    [(paramaters loc)
+    [(parameters loc)
      (tu/group-definition (zx/xml-> loc (tu/pref :ExtendedAttributes)
                                     (tu/pref :ExtendedAttribute))
                           :attribute
@@ -257,8 +303,8 @@
     (zx/xml-> tu/*zip* (tu/pref :Applications) (tu/pref :Application))
     :interface interface)
    (tu/group-definition
-    (zx/xml-> tu/*zip* (tu/pref :Messages) (tu/pref :Message))
-    :message (comp tu/map2lckws tu/tagblock zip/node))
+    (zx/xml-> tu/*zip* (tu/pref :MessageFlows) (tu/pref :MessageFlow))
+    :message (comp tu/map2lckws #(tu/tagblock % :message) zip/node))
    (tu/group-definition
     (zx/xml-> tu/*zip* (tu/pref :Stores) (tu/pref :Store))
     :store (comp tu/map2lckws tu/tagblock zip/node))
@@ -276,13 +322,16 @@
   "Returns the attribute and PackageHeader information as
   a map of associative name values"
   []
-  (conj (apply merge
+  (let [_script {:script (:Type (:attrs (zx/xml1-> tu/*zip* (tu/pref :Script) zip/node)))}]
+    (conj (apply merge
                (map (comp #(assoc {} (:tag %) (first (:content %)))
                           tu/tagblockwc)
                     (zx/xml-> tu/*zip*
                               (tu/ptags= :PackageHeader :RedefinableHeader)
                               zip/children)))
+          _script
         (:attrs (zip/node tu/*zip*))))
+  )
 
 (defn context
   "Takes a parse block and returns process context, wrapping all elements in

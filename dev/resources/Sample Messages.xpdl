@@ -1,0 +1,805 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xpdl:Package xmlns:xpdl="http://www.wfmc.org/2008/XPDL2.1" xmlns="http://www.wfmc.org/2008/XPDL2.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Id="samplepackage" Name="Sample Package" xsi:schemaLocation="http://www.wfmc.org/2008/XPDL2.1 http://www.yaoqiang.org/schemas/bpmnxpdl_31.xsd">
+    <xpdl:PackageHeader>
+        <xpdl:XPDLVersion>2.1</xpdl:XPDLVersion>
+        <xpdl:Vendor>Yaoqiang</xpdl:Vendor>
+        <xpdl:Created>2010-05-13 13:30:13</xpdl:Created>
+    </xpdl:PackageHeader>
+    <xpdl:RedefinableHeader PublicationStatus="UNDER_TEST">
+        <xpdl:Author>史耀强</xpdl:Author>
+        <xpdl:Version>0.07</xpdl:Version>
+    </xpdl:RedefinableHeader>
+    <xpdl:PartnerLinkTypes>
+        <xpdl:PartnerLinkType Id="samplepackage_1" name="samplepackage_1">
+            <xpdl:Role Name="newpkg1_wp1" portType=""/>
+        </xpdl:PartnerLinkType>
+        <xpdl:PartnerLinkType Id="samplepackage_2" name="samplepackage_2">
+            <xpdl:Role Name="newpkg1_wp1" portType=""/>
+        </xpdl:PartnerLinkType>
+    </xpdl:PartnerLinkTypes>
+    <xpdl:Pages>
+        <xpdl:Page Id="1" Name="Page 1"/>
+    </xpdl:Pages>
+    <xpdl:Pools>
+        <xpdl:Pool BoundaryVisible="true" Id="newpkg1_wp1" MainPool="false" Name="newpkg1_wp1" Orientation="HORIZONTAL" Process="newpkg1_wp1">
+            <xpdl:NodeGraphicsInfos>
+                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#993333" Height="67" IsVisible="true" Shape="swimlane" ToolId="Yaoqiang_XE" Width="1050">
+                    <xpdl:Coordinates XCoordinate="20.0" YCoordinate="20.0"/>
+                </xpdl:NodeGraphicsInfo>
+            </xpdl:NodeGraphicsInfos>
+        </xpdl:Pool>
+        <xpdl:Pool BoundaryVisible="true" Id="newpkg1_wp2" MainPool="false" Name="newpkg1_wp2" Orientation="HORIZONTAL" Process="newpkg1_wp2">
+            <xpdl:Lanes>
+                <xpdl:Lane Id="newpkg1_lane1" Name="Lane">
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#993333" Height="200" IsVisible="true" Shape="swimlane" ToolId="Yaoqiang_XE" Width="1024">
+                            <xpdl:Coordinates XCoordinate="26.0" YCoordinate="1.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                    <xpdl:Performers>
+                        <xpdl:Performer>newpkg1_wp2_par1</xpdl:Performer>
+                    </xpdl:Performers>
+                </xpdl:Lane>
+                <xpdl:Lane Id="newpkg1_lane2" Name="Lane">
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#993333" Height="200" IsVisible="true" Shape="swimlane" ToolId="Yaoqiang_XE" Width="1024">
+                            <xpdl:Coordinates XCoordinate="26.0" YCoordinate="201.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                    <xpdl:Performers>
+                        <xpdl:Performer>newpkg1_wp2_par2</xpdl:Performer>
+                    </xpdl:Performers>
+                    <xpdl:NestedLane LaneId="newpkg1_lane3"/>
+                    <xpdl:NestedLane LaneId="newpkg1_lane4"/>
+                </xpdl:Lane>
+                <xpdl:Lane Id="newpkg1_lane3" Name="Lane">
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#993333" Height="200" IsVisible="true" Shape="swimlane" ToolId="Yaoqiang_XE" Width="998">
+                            <xpdl:Coordinates XCoordinate="26.0" YCoordinate="1.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                    <xpdl:Performers>
+                        <xpdl:Performer>newpkg1_wp2_par3</xpdl:Performer>
+                    </xpdl:Performers>
+                </xpdl:Lane>
+                <xpdl:Lane Id="newpkg1_lane4" Name="Lane">
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#993333" Height="200" IsVisible="true" Shape="swimlane" ToolId="Yaoqiang_XE" Width="998">
+                            <xpdl:Coordinates XCoordinate="26.0" YCoordinate="201.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                    <xpdl:Performers>
+                        <xpdl:Performer>newpkg1_wp2_par4</xpdl:Performer>
+                    </xpdl:Performers>
+                </xpdl:Lane>
+            </xpdl:Lanes>
+            <xpdl:NodeGraphicsInfos>
+                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#993333" Height="200" IsVisible="true" Shape="swimlane" ToolId="Yaoqiang_XE" Width="1050">
+                    <xpdl:Coordinates XCoordinate="20.0" YCoordinate="147.0"/>
+                </xpdl:NodeGraphicsInfo>
+            </xpdl:NodeGraphicsInfos>
+        </xpdl:Pool>
+    </xpdl:Pools>
+    <xpdl:MessageFlows>
+        <xpdl:MessageFlow Id="samplepackage_1" Name="Message Flow" Source="newpkg1_wp2_act3" Target="newpkg1_wp1">
+            <xpdl:Message Id="0"/>
+            <xpdl:Object Id="0"/>
+            <xpdl:ConnectorGraphicsInfos>
+                <xpdl:ConnectorGraphicsInfo Style="messageFlow" ToolId="Yaoqiang_XE">
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="31.0"/>
+                    <xpdl:Coordinates XCoordinate="1.0" YCoordinate="40.0"/>
+                    <xpdl:Coordinates XCoordinate="260.0" YCoordinate="115.0"/>
+                </xpdl:ConnectorGraphicsInfo>
+            </xpdl:ConnectorGraphicsInfos>
+        </xpdl:MessageFlow>
+        <xpdl:MessageFlow Id="samplepackage_2" Name="Message Flow" Source="newpkg1_wp1" Target="newpkg1_wp2_act7">
+            <xpdl:Message Id="0"/>
+            <xpdl:Object Id="0"/>
+            <xpdl:ConnectorGraphicsInfos>
+                <xpdl:ConnectorGraphicsInfo Style="messageFlow" ToolId="Yaoqiang_XE">
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="-7.0"/>
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="50.0"/>
+                </xpdl:ConnectorGraphicsInfo>
+            </xpdl:ConnectorGraphicsInfos>
+        </xpdl:MessageFlow>
+    </xpdl:MessageFlows>
+    <xpdl:Associations>
+        <xpdl:Association AssociationDirection="None" Id="newpkg1_1" Name="A1" Source="newpkg1_1" Target="newpkg1_wp2_tra14">
+            <xpdl:Object Id="0"/>
+            <xpdl:ConnectorGraphicsInfos>
+                <xpdl:ConnectorGraphicsInfo Style="association" ToolId="Yaoqiang_XE">
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                </xpdl:ConnectorGraphicsInfo>
+            </xpdl:ConnectorGraphicsInfos>
+        </xpdl:Association>
+        <xpdl:Association AssociationDirection="To" Id="newpkg1_2" Name="A2" Source="newpkg1_wp2_act16" Target="newpkg1_2">
+            <xpdl:Object Id="0"/>
+            <xpdl:ConnectorGraphicsInfos>
+                <xpdl:ConnectorGraphicsInfo Style="dataobjectFlow" ToolId="Yaoqiang_XE">
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                    <xpdl:Coordinates XCoordinate="778.0" YCoordinate="176.0"/>
+                </xpdl:ConnectorGraphicsInfo>
+            </xpdl:ConnectorGraphicsInfos>
+        </xpdl:Association>
+        <xpdl:Association AssociationDirection="None" Id="newpkg1_3" Name="A3" Source="newpkg1_4" Target="newpkg1_3">
+            <xpdl:Object Id="0"/>
+            <xpdl:ConnectorGraphicsInfos>
+                <xpdl:ConnectorGraphicsInfo Style="association" ToolId="Yaoqiang_XE">
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                </xpdl:ConnectorGraphicsInfo>
+            </xpdl:ConnectorGraphicsInfos>
+        </xpdl:Association>
+    </xpdl:Associations>
+    <xpdl:Artifacts>
+        <xpdl:Artifact ArtifactType="DataObject" Id="newpkg1_1" Name="newpkg1_1">
+            <xpdl:DataObject Id="newpkg1_1" Name="Data Object"/>
+            <xpdl:NodeGraphicsInfos>
+                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#E8EEF7" Height="50" IsVisible="true" LaneId="newpkg1_lane3" Shape="dataobject" ToolId="Yaoqiang_XE" Width="40">
+                    <xpdl:Coordinates XCoordinate="234.0" YCoordinate="187.0"/>
+                </xpdl:NodeGraphicsInfo>
+            </xpdl:NodeGraphicsInfos>
+        </xpdl:Artifact>
+        <xpdl:Artifact ArtifactType="DataObject" Id="newpkg1_2" Name="newpkg1_2">
+            <xpdl:DataObject Id="newpkg1_2" Name="Data Object"/>
+            <xpdl:NodeGraphicsInfos>
+                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#E8EEF7" Height="50" IsVisible="true" LaneId="newpkg1_lane3" Shape="dataobject" ToolId="Yaoqiang_XE" Width="40">
+                    <xpdl:Coordinates XCoordinate="852.0" YCoordinate="154.0"/>
+                </xpdl:NodeGraphicsInfo>
+            </xpdl:NodeGraphicsInfos>
+        </xpdl:Artifact>
+        <xpdl:Artifact ArtifactType="Group" Id="newpkg1_3" Name="newpkg1_3">
+            <xpdl:Group Id="newpkg1_3" Name="Grouping"/>
+            <xpdl:NodeGraphicsInfos>
+                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FFFFEE" Height="110" IsVisible="true" Shape="group;fontColor=#3333FF" ToolId="Yaoqiang_XE" Width="540">
+                    <xpdl:Coordinates XCoordinate="335.0" YCoordinate="650.0"/>
+                </xpdl:NodeGraphicsInfo>
+            </xpdl:NodeGraphicsInfos>
+        </xpdl:Artifact>
+        <xpdl:Artifact ArtifactType="Annotation" Id="newpkg1_4" Name="newpkg1_4" TextAnnotation="Text Annotation">
+            <xpdl:NodeGraphicsInfos>
+                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#E8EEF7" Height="35" IsVisible="true" Shape="annotation" ToolId="Yaoqiang_XE" Width="85">
+                    <xpdl:Coordinates XCoordinate="145.0" YCoordinate="773.0"/>
+                </xpdl:NodeGraphicsInfo>
+            </xpdl:NodeGraphicsInfos>
+        </xpdl:Artifact>
+    </xpdl:Artifacts>
+    <xpdl:WorkflowProcesses>
+        <xpdl:WorkflowProcess AccessLevel="PUBLIC" Id="newpkg1_wp1" Name="Collapsed Pool">
+            <xpdl:ProcessHeader>
+                <xpdl:Created>2010-05-13 13:30:15</xpdl:Created>
+            </xpdl:ProcessHeader>
+        </xpdl:WorkflowProcess>
+        <xpdl:WorkflowProcess AccessLevel="PUBLIC" Id="newpkg1_wp2" Name="Expanded Pool">
+            <xpdl:ProcessHeader>
+                <xpdl:Created>2010-05-13 13:30:41</xpdl:Created>
+            </xpdl:ProcessHeader>
+            <xpdl:Participants>
+                <xpdl:Participant Id="newpkg1_wp2_par1" Name="newpkg1_wp2_par1">
+                    <xpdl:ParticipantType Type="ROLE"/>
+                </xpdl:Participant>
+                <xpdl:Participant Id="newpkg1_wp2_par2" Name="newpkg1_wp2_par2">
+                    <xpdl:ParticipantType Type="ROLE"/>
+                </xpdl:Participant>
+                <xpdl:Participant Id="newpkg1_wp2_par3" Name="newpkg1_wp2_par3">
+                    <xpdl:ParticipantType Type="ROLE"/>
+                </xpdl:Participant>
+                <xpdl:Participant Id="newpkg1_wp2_par4" Name="newpkg1_wp2_par4">
+                    <xpdl:ParticipantType Type="ROLE"/>
+                </xpdl:Participant>
+            </xpdl:Participants>
+            <xpdl:ActivitySets>
+                <xpdl:ActivitySet AdHoc="true" AdHocOrdering="Parallel" Id="newpkg1_wp2_ase1">
+                    <xpdl:Activities>
+                        <xpdl:Activity Id="newpkg1_wp2_act14" IsATransaction="false" Name="Task">
+                            <xpdl:Implementation>
+                                <xpdl:Task>
+                                    <xpdl:TaskApplication Id=""/>
+                                </xpdl:Task>
+                            </xpdl:Implementation>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" Shape="taskApplication" ToolId="Yaoqiang_XE" Width="85">
+                                    <xpdl:Coordinates XCoordinate="16.0" YCoordinate="36.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                        <xpdl:Activity Id="newpkg1_wp2_act15" IsATransaction="false" Name="Task">
+                            <xpdl:Implementation>
+                                <xpdl:Task>
+                                    <xpdl:TaskApplication Id=""/>
+                                </xpdl:Task>
+                            </xpdl:Implementation>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" Shape="taskApplication" ToolId="Yaoqiang_XE" Width="85">
+                                    <xpdl:Coordinates XCoordinate="16.0" YCoordinate="132.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                    </xpdl:Activities>
+                </xpdl:ActivitySet>
+                <xpdl:ActivitySet AdHoc="false" AdHocOrdering="Parallel" Id="newpkg1_wp2_ase2">
+                    <xpdl:Activities>
+                        <xpdl:Activity Id="newpkg1_wp2_act18" IsATransaction="false" Name="Start Event">
+                            <xpdl:Event>
+                                <xpdl:StartEvent Implementation="WebService" Trigger="None">
+                                    <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                        <xpdl:Message Id="0"/>
+                                        <xpdl:WebServiceOperation OperationName="">
+                                            <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                        </xpdl:WebServiceOperation>
+                                    </xpdl:TriggerResultMessage>
+                                </xpdl:StartEvent>
+                            </xpdl:Event>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#33FF00" Height="35" IsVisible="true" Shape="startEvent" ToolId="Yaoqiang_XE" Width="35">
+                                    <xpdl:Coordinates XCoordinate="18.0" YCoordinate="92.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                        <xpdl:Activity Id="newpkg1_wp2_act19" IsATransaction="false" Name="Exclusive Gateway">
+                            <xpdl:Route ExclusiveType="Data" GatewayType="Exclusive" Instantiate="false" MarkerVisible="true"/>
+                            <xpdl:TransitionRestrictions>
+                                <xpdl:TransitionRestriction>
+                                    <xpdl:Join ExclusiveType="Data"/>
+                                    <xpdl:Split ExclusiveType="Data" Type="Inclusive">
+                                        <xpdl:TransitionRefs>
+                                            <xpdl:TransitionRef Id="newpkg1_wp2_tra16"/>
+                                            <xpdl:TransitionRef Id="newpkg1_wp2_tra17"/>
+                                        </xpdl:TransitionRefs>
+                                    </xpdl:Split>
+                                </xpdl:TransitionRestriction>
+                            </xpdl:TransitionRestrictions>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF9999" Height="60" IsVisible="true" Shape="dataBasedExclusiveGatewayWithIndicator;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle" ToolId="Yaoqiang_XE" Width="60">
+                                    <xpdl:Coordinates XCoordinate="92.0" YCoordinate="81.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                        <xpdl:Activity Id="newpkg1_wp2_act20" IsATransaction="false" Name="Task">
+                            <xpdl:Implementation>
+                                <xpdl:Task>
+                                    <xpdl:TaskUser Implementation="WebService"/>
+                                </xpdl:Task>
+                            </xpdl:Implementation>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" Shape="taskUser" ToolId="Yaoqiang_XE" Width="85">
+                                    <xpdl:Coordinates XCoordinate="206.0" YCoordinate="152.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                        <xpdl:Activity Id="newpkg1_wp2_act21" IsATransaction="false" Name="Task">
+                            <xpdl:Implementation>
+                                <xpdl:Task>
+                                    <xpdl:TaskApplication Id=""/>
+                                </xpdl:Task>
+                            </xpdl:Implementation>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" Shape="taskApplication" ToolId="Yaoqiang_XE" Width="85">
+                                    <xpdl:Coordinates XCoordinate="204.0" YCoordinate="32.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                        <xpdl:Activity Id="newpkg1_wp2_act22" IsATransaction="false" Name="End Event">
+                            <xpdl:Event>
+                                <xpdl:EndEvent Implementation="WebService" Result="None">
+                                    <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                        <xpdl:Message Id="0"/>
+                                        <xpdl:WebServiceOperation OperationName="">
+                                            <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                        </xpdl:WebServiceOperation>
+                                    </xpdl:TriggerResultMessage>
+                                </xpdl:EndEvent>
+                            </xpdl:Event>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF0000" Height="35" IsVisible="true" Shape="endEvent" ToolId="Yaoqiang_XE" Width="35">
+                                    <xpdl:Coordinates XCoordinate="338.0" YCoordinate="42.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                        <xpdl:Activity Id="newpkg1_wp2_act23" IsATransaction="false" Name="End Error Event">
+                            <xpdl:Event>
+                                <xpdl:EndEvent Implementation="WebService" Result="Error">
+                                    <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                        <xpdl:Message Id="0"/>
+                                        <xpdl:WebServiceOperation OperationName="">
+                                            <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                        </xpdl:WebServiceOperation>
+                                    </xpdl:TriggerResultMessage>
+                                </xpdl:EndEvent>
+                            </xpdl:Event>
+                            <xpdl:NodeGraphicsInfos>
+                                <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF0000" Height="35" IsVisible="true" Shape="endErrorEvent" ToolId="Yaoqiang_XE" Width="35">
+                                    <xpdl:Coordinates XCoordinate="339.0" YCoordinate="162.0"/>
+                                </xpdl:NodeGraphicsInfo>
+                            </xpdl:NodeGraphicsInfos>
+                        </xpdl:Activity>
+                    </xpdl:Activities>
+                    <xpdl:Transitions>
+                        <xpdl:Transition From="newpkg1_wp2_act18" Id="newpkg1_wp2_tra15" Name="T15" To="newpkg1_wp2_act19">
+                            <xpdl:ConnectorGraphicsInfos>
+                                <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                </xpdl:ConnectorGraphicsInfo>
+                            </xpdl:ConnectorGraphicsInfos>
+                        </xpdl:Transition>
+                        <xpdl:Transition From="newpkg1_wp2_act19" Id="newpkg1_wp2_tra16" Name="Default Flow" To="newpkg1_wp2_act20">
+                            <xpdl:Condition Type="OTHERWISE"/>
+                            <xpdl:ConnectorGraphicsInfos>
+                                <xpdl:ConnectorGraphicsInfo Style="defaultFlow" ToolId="Yaoqiang_XE">
+                                    <xpdl:Coordinates XCoordinate="9.0" YCoordinate="0.0"/>
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="10.0"/>
+                                    <xpdl:Coordinates XCoordinate="123.0" YCoordinate="171.0"/>
+                                </xpdl:ConnectorGraphicsInfo>
+                            </xpdl:ConnectorGraphicsInfos>
+                        </xpdl:Transition>
+                        <xpdl:Transition From="newpkg1_wp2_act19" Id="newpkg1_wp2_tra17" Name="Condition" To="newpkg1_wp2_act21">
+                            <xpdl:Condition Type="CONDITION"/>
+                            <xpdl:ConnectorGraphicsInfos>
+                                <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                    <xpdl:Coordinates XCoordinate="123.0" YCoordinate="61.0"/>
+                                </xpdl:ConnectorGraphicsInfo>
+                            </xpdl:ConnectorGraphicsInfos>
+                        </xpdl:Transition>
+                        <xpdl:Transition From="newpkg1_wp2_act21" Id="newpkg1_wp2_tra18" Name="T18" To="newpkg1_wp2_act22">
+                            <xpdl:ConnectorGraphicsInfos>
+                                <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                </xpdl:ConnectorGraphicsInfo>
+                            </xpdl:ConnectorGraphicsInfos>
+                        </xpdl:Transition>
+                        <xpdl:Transition From="newpkg1_wp2_act20" Id="newpkg1_wp2_tra19" Name="T19" To="newpkg1_wp2_act23">
+                            <xpdl:ConnectorGraphicsInfos>
+                                <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                    <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                                </xpdl:ConnectorGraphicsInfo>
+                            </xpdl:ConnectorGraphicsInfos>
+                        </xpdl:Transition>
+                    </xpdl:Transitions>
+                </xpdl:ActivitySet>
+            </xpdl:ActivitySets>
+            <xpdl:Activities>
+                <xpdl:Activity Id="newpkg1_wp2_act1" IsATransaction="false" Name="Start Event">
+                    <xpdl:Event>
+                        <xpdl:StartEvent Implementation="WebService" Trigger="Conditional">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:StartEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#33FF00" Height="35" IsVisible="true" LaneId="newpkg1_lane1" Shape="startConditionalEvent" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="48.0" YCoordinate="71.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act2" IsATransaction="false" Name="Parallel Gateway">
+                    <xpdl:Route ExclusiveType="Data" GatewayType="Parallel" Instantiate="false" MarkerVisible="false"/>
+                    <xpdl:TransitionRestrictions>
+                        <xpdl:TransitionRestriction>
+                            <xpdl:Join ExclusiveType="Data"/>
+                            <xpdl:Split ExclusiveType="Data" Type="Inclusive">
+                                <xpdl:TransitionRefs>
+                                    <xpdl:TransitionRef Id="newpkg1_wp2_tra13"/>
+                                    <xpdl:TransitionRef Id="newpkg1_wp2_tra2"/>
+                                </xpdl:TransitionRefs>
+                            </xpdl:Split>
+                        </xpdl:TransitionRestriction>
+                    </xpdl:TransitionRestrictions>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF9999" Height="60" IsVisible="true" LaneId="newpkg1_lane1" Shape="parallelGateway;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom" ToolId="Yaoqiang_XE" Width="60">
+                            <xpdl:Coordinates XCoordinate="110.0" YCoordinate="59.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act3" IsATransaction="false" Name="Message Event">
+                    <xpdl:Event>
+                        <xpdl:IntermediateEvent Implementation="WebService" Trigger="Message">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:IntermediateEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#C8FF00" Height="35" IsVisible="true" LaneId="newpkg1_lane1" Shape="intermediateMessageEvent" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="199.0" YCoordinate="71.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act4" IsATransaction="false" Name="Collapsed Subprocess">
+                    <xpdl:Implementation>
+                        <xpdl:SubFlow Execution="SYNCHR" Id="newpkg1_wp2"/>
+                    </xpdl:Implementation>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#BBBBFF" Height="55" IsVisible="true" LaneId="newpkg1_lane1" Shape="subflow" ToolId="Yaoqiang_XE" Width="85">
+                            <xpdl:Coordinates XCoordinate="270.0" YCoordinate="61.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act5" IsATransaction="false" Name="Exclusive Gateway">
+                    <xpdl:Route ExclusiveType="Event" GatewayType="Exclusive" Instantiate="false" MarkerVisible="false"/>
+                    <xpdl:TransitionRestrictions>
+                        <xpdl:TransitionRestriction>
+                            <xpdl:Join ExclusiveType="Data"/>
+                            <xpdl:Split ExclusiveType="Data" Type="Inclusive">
+                                <xpdl:TransitionRefs>
+                                    <xpdl:TransitionRef Id="newpkg1_wp2_tra10"/>
+                                    <xpdl:TransitionRef Id="newpkg1_wp2_tra5"/>
+                                </xpdl:TransitionRefs>
+                            </xpdl:Split>
+                        </xpdl:TransitionRestriction>
+                    </xpdl:TransitionRestrictions>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF9999" Height="60" IsVisible="true" LaneId="newpkg1_lane1" Shape="eventBasedExclusiveGateway" ToolId="Yaoqiang_XE" Width="60">
+                            <xpdl:Coordinates XCoordinate="394.0" YCoordinate="59.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act6" IsATransaction="false" Name="Message Event">
+                    <xpdl:Event>
+                        <xpdl:IntermediateEvent Implementation="WebService" Trigger="Message">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:IntermediateEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#C8FF00" Height="35" IsVisible="true" LaneId="newpkg1_lane1" Shape="intermediateMessageEvent" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="512.0" YCoordinate="20.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act7" IsATransaction="false" Name="Loop Activity">
+                    <xpdl:Implementation>
+                        <xpdl:Task>
+                            <xpdl:TaskService Implementation="WebService"/>
+                        </xpdl:Task>
+                    </xpdl:Implementation>
+                    <xpdl:Loop LoopType="Standard"/>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" LaneId="newpkg1_lane1" Shape="taskServiceLoop" ToolId="Yaoqiang_XE" Width="85">
+                            <xpdl:Coordinates XCoordinate="611.0" YCoordinate="9.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act8" IsATransaction="false" Name="Gateway">
+                    <xpdl:Route ExclusiveType="Data" GatewayType="Exclusive" Instantiate="false" MarkerVisible="true"/>
+                    <xpdl:TransitionRestrictions>
+                        <xpdl:TransitionRestriction>
+                            <xpdl:Join ExclusiveType="Data" Type="Exclusive"/>
+                            <xpdl:Split ExclusiveType="Data"/>
+                        </xpdl:TransitionRestriction>
+                    </xpdl:TransitionRestrictions>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF9999" Height="60" IsVisible="true" LaneId="newpkg1_lane1" Shape="dataBasedExclusiveGatewayWithIndicator" ToolId="Yaoqiang_XE" Width="60">
+                            <xpdl:Coordinates XCoordinate="773.0" YCoordinate="59.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act9" IsATransaction="false" Name="Parallel Gateway">
+                    <xpdl:Route ExclusiveType="Data" GatewayType="Parallel" Instantiate="false" MarkerVisible="false"/>
+                    <xpdl:TransitionRestrictions>
+                        <xpdl:TransitionRestriction>
+                            <xpdl:Join ExclusiveType="Data" Type="Exclusive"/>
+                            <xpdl:Split ExclusiveType="Data"/>
+                        </xpdl:TransitionRestriction>
+                    </xpdl:TransitionRestrictions>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF9999" Height="60" IsVisible="true" LaneId="newpkg1_lane1" Shape="parallelGateway;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom" ToolId="Yaoqiang_XE" Width="60">
+                            <xpdl:Coordinates XCoordinate="865.0" YCoordinate="59.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act10" IsATransaction="false" Name="End Event">
+                    <xpdl:Event>
+                        <xpdl:EndEvent Implementation="WebService" Result="None">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:EndEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF0000" Height="35" IsVisible="true" LaneId="newpkg1_lane1" Shape="endEvent" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="959.0" YCoordinate="71.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act11" IsATransaction="false" Name="Timer Event">
+                    <xpdl:Event>
+                        <xpdl:IntermediateEvent Implementation="WebService" Trigger="Timer">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:IntermediateEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#C8FF00" Height="35" IsVisible="true" LaneId="newpkg1_lane1" Shape="intermediateTimerEvent" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="512.0" YCoordinate="130.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act12" IsATransaction="false" Name="Multi Instance">
+                    <xpdl:Implementation>
+                        <xpdl:Task>
+                            <xpdl:TaskScript>
+                                <xpdl:Script/>
+                            </xpdl:TaskScript>
+                        </xpdl:Task>
+                    </xpdl:Implementation>
+                    <xpdl:Loop LoopType="MultiInstance"/>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" LaneId="newpkg1_lane1" Shape="taskScriptMultiple" ToolId="Yaoqiang_XE" Width="85">
+                            <xpdl:Coordinates XCoordinate="612.0" YCoordinate="120.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act13" IsATransaction="false" Name="Ad-hoc Subprocess">
+                    <xpdl:BlockActivity ActivitySetId="newpkg1_wp2_ase1" View="EXPANDED"/>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#CCCCFF" Height="215" IsVisible="true" LaneId="newpkg1_lane3" Shape="adHocEmbeddedSubflow" ToolId="Yaoqiang_XE" Width="135">
+                            <xpdl:Coordinates XCoordinate="50.0" YCoordinate="15.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act17" IsATransaction="false" Name="Task">
+                    <xpdl:Implementation>
+                        <xpdl:Task>
+                            <xpdl:TaskManual/>
+                        </xpdl:Task>
+                    </xpdl:Implementation>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" LaneId="newpkg1_lane4" Shape="taskManual" ToolId="Yaoqiang_XE" Width="85">
+                            <xpdl:Coordinates XCoordinate="278.0" YCoordinate="80.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act16" IsATransaction="false" Name="Embedded Subprocess">
+                    <xpdl:BlockActivity ActivitySetId="newpkg1_wp2_ase2" View="EXPANDED"/>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#CCCCFF" Height="225" IsVisible="true" LaneId="newpkg1_lane3" Shape="embeddedSubflow" ToolId="Yaoqiang_XE" Width="410">
+                            <xpdl:Coordinates XCoordinate="310.0" YCoordinate="10.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act24" IsATransaction="false" Name="Task">
+                    <xpdl:Implementation>
+                        <xpdl:Task>
+                            <xpdl:TaskApplication Id=""/>
+                        </xpdl:Task>
+                    </xpdl:Implementation>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#99FF99" Height="55" IsVisible="true" LaneId="newpkg1_lane4" Shape="taskApplication" ToolId="Yaoqiang_XE" Width="85">
+                            <xpdl:Coordinates XCoordinate="698.0" YCoordinate="80.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act25" IsATransaction="false" Name="Terminate End Event">
+                    <xpdl:Event>
+                        <xpdl:EndEvent Implementation="WebService" Result="Terminate">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:EndEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#FF0000" Height="35" IsVisible="true" LaneId="newpkg1_lane4" Shape="endTerminateEvent" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="877.0" YCoordinate="90.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act26" IsATransaction="false" Name="Timer Event">
+                    <xpdl:Event>
+                        <xpdl:IntermediateEvent Implementation="WebService" Target="newpkg1_wp2_act13" Trigger="Timer">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:IntermediateEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#C8FF00" Height="35" IsVisible="true" LaneId="newpkg1_lane3" Shape="intermediateTimerEvent;labelPosition=left;verticalLabelPosition=bottom;align=right;verticalAlign=top" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="11.0" YCoordinate="-17.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+                <xpdl:Activity Id="newpkg1_wp2_act27" IsATransaction="false" Name="Error Event">
+                    <xpdl:Event>
+                        <xpdl:IntermediateEvent Implementation="WebService" Target="newpkg1_wp2_act16" Trigger="Error">
+                            <xpdl:TriggerResultMessage CatchThrow="CATCH">
+                                <xpdl:Message Id="0"/>
+                                <xpdl:WebServiceOperation OperationName="">
+                                    <xpdl:Partner PartnerLinkId="" RoleType="MyRole"/>
+                                </xpdl:WebServiceOperation>
+                            </xpdl:TriggerResultMessage>
+                        </xpdl:IntermediateEvent>
+                    </xpdl:Event>
+                    <xpdl:NodeGraphicsInfos>
+                        <xpdl:NodeGraphicsInfo BorderColor="#000000" FillColor="#C8FF00" Height="35" IsVisible="true" LaneId="newpkg1_lane3" Shape="intermediateErrorEvent;labelPosition=left;verticalLabelPosition=bottom;align=right;verticalAlign=top" ToolId="Yaoqiang_XE" Width="35">
+                            <xpdl:Coordinates XCoordinate="58.0" YCoordinate="-17.0"/>
+                        </xpdl:NodeGraphicsInfo>
+                    </xpdl:NodeGraphicsInfos>
+                </xpdl:Activity>
+            </xpdl:Activities>
+            <xpdl:Transitions>
+                <xpdl:Transition From="newpkg1_wp2_act1" Id="newpkg1_wp2_tra1" Name="T1" To="newpkg1_wp2_act2">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act2" Id="newpkg1_wp2_tra2" Name="T2" To="newpkg1_wp2_act3">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act3" Id="newpkg1_wp2_tra3" Name="T3" To="newpkg1_wp2_act4">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act4" Id="newpkg1_wp2_tra4" Name="T4" To="newpkg1_wp2_act5">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act5" Id="newpkg1_wp2_tra5" Name="T5" To="newpkg1_wp2_act6">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act6" Id="newpkg1_wp2_tra6" Name="T6" To="newpkg1_wp2_act7">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act7" Id="newpkg1_wp2_tra7" Name="T7" To="newpkg1_wp2_act8">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act8" Id="newpkg1_wp2_tra8" Name="T8" To="newpkg1_wp2_act9">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act9" Id="newpkg1_wp2_tra9" Name="T9" To="newpkg1_wp2_act10">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act5" Id="newpkg1_wp2_tra10" Name="T10" To="newpkg1_wp2_act11">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act11" Id="newpkg1_wp2_tra11" Name="T11" To="newpkg1_wp2_act12">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act12" Id="newpkg1_wp2_tra12" Name="T12" To="newpkg1_wp2_act8">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act2" Id="newpkg1_wp2_tra13" Name="Sequence Flow" To="newpkg1_wp2_act13">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge;horizontal=0" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="-11.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act13" Id="newpkg1_wp2_tra14" Name="T14" To="newpkg1_wp2_act16">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act16" Id="newpkg1_wp2_tra20" Name="T20" To="newpkg1_wp2_act9">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="920.0" YCoordinate="313.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act24" Id="newpkg1_wp2_tra21" Name="T21" To="newpkg1_wp2_act25">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act26" Id="newpkg1_wp2_tra22" Name="T22" To="newpkg1_wp2_act17">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="174.0" YCoordinate="302.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+                <xpdl:Transition From="newpkg1_wp2_act27" Id="newpkg1_wp2_tra23" Name="T23" To="newpkg1_wp2_act24">
+                    <xpdl:ConnectorGraphicsInfos>
+                        <xpdl:ConnectorGraphicsInfo Style="defaultEdge" ToolId="Yaoqiang_XE">
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="0.0" YCoordinate="0.0"/>
+                            <xpdl:Coordinates XCoordinate="619.0" YCoordinate="302.0"/>
+                        </xpdl:ConnectorGraphicsInfo>
+                    </xpdl:ConnectorGraphicsInfos>
+                </xpdl:Transition>
+            </xpdl:Transitions>
+        </xpdl:WorkflowProcess>
+    </xpdl:WorkflowProcesses>
+    <xpdl:ExtendedAttributes>
+        <xpdl:ExtendedAttribute Name="EDITING_TOOL" Value="耀强XPDL/BPMN编辑器"/>
+        <xpdl:ExtendedAttribute Name="EDITING_TOOL_VERSION" Value="2.0.7-C-20100525-1427"/>
+        <xpdl:ExtendedAttribute Name="YqXE_CONFIGURATION" Value="default"/>
+    </xpdl:ExtendedAttributes>
+</xpdl:Package>

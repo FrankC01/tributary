@@ -4,22 +4,21 @@ A Clojure library for parsing BPMN and/or XPDL.
 
 ## Objective
 
-Intent is to support developers that require processing of business processes articulated in XPDL/BPMN resources.
+Intent is to support developers that require processing of business processes declared in XPDL/BPMN sources.
 
-First thoughts are to establish a context by which analyzers and execution may occur or at least advance the notion.
+First thoughts are to establish a context by which analyzers and execution may occur or at least advance the conversation.
 
 ## Roadmap
 
 | Release | Descritpion |
 | -------: | :----------- |
-|~~0.1.2-SNAPSHOT (Complete)~~  | ~~BPMN Parse (rich type handling), expect refactoring~~ |
-| 0.1.3-SNAPSHOT (Current)   | XPDL initial foray, expect refactoring |
-| 0.1.4-SNAPSHOT   | XPDL Parse (rich type handling), expect refactoring |
+| ~~0.1.3-SNAPSHOT (Complete)~~  | ~~XPDL initial foray, expect refactoring~~ |
+| 0.1.4-SNAPSHOT (Current)  | XPDL Parse (rich type handling), expect refactoring |
 | 0.1.5-SNAPSHOT   | Normalize data model |
 | 0.2.0            | First Release - add quality, richness and features |
 
 
-## Usage 0.1.3-SNAPSHOT
+## Usage 0.1.4-SNAPSHOT
 The latest makes a significant change from previous data models. I've opted to align more to the original parse xml format for a number of reasons:
 
 1. Closer to the original source
@@ -32,7 +31,7 @@ Assuming you've cloned and installed tributary:
 ___Add the dependency to your project.clj___
 
 ````clojure
-:dependencies [[tributary "0.1.3-SNAPSHOT"]
+:dependencies [[tributary "0.1.4-SNAPSHOT"]
   ...]
 ````
 ___Add to namespace___
@@ -58,7 +57,7 @@ ___Parse source and generate a context___
                  :resource-paths ["dev/resources"]}}
 ````
 
-### Description (BPMN) 0.1.3-SNAPSHOT
+### Description (BPMN) 0.1.4-SNAPSHOT
 
 The data model has changed significantly back in 0.1.2 from the ad-hoc map model I was creating to the standard XML structure to take advantage of build-in zippers and other utilities. The following descripes the mapping and support for XPDL for this project version:
 
