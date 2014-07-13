@@ -219,15 +219,19 @@
   "Parses the sequence flow from source and structures
   the execution path tree"
   [proot]
-  (binding [*cycle* (atom [])]
-    (let [_start (zx/xml-> *nodes* :startEvent (zx/attr :id))
-          _troot (zx/xml1-> proot (tu/pref :Transitions))]
-      (reset! *cycle* [])
-      {:tag :group
-                  :attrs {:count (count _start) :dtype :sequence}
-                  :content (vec (flatten (reduce conj (mapv #(flow-step % _troot) _start))))
-                  }))
-  )
+  (cond
+   (or (empty? (zx/xml-> *nodes* :startEvent (zx/attr :id)))
+       (empty? (zx/xml1-> proot (tu/pref :Transitions))))
+     {:tag :group :attrs {:count 0 :dtype :sequence} :content nil}
+   :else
+    (binding [*cycle* (atom [])]
+      (let [_start (zx/xml-> *nodes* :startEvent (zx/attr :id))
+            _troot (zx/xml1-> proot (tu/pref :Transitions))]
+        (reset! *cycle* [])
+        {:tag :group
+         :attrs {:count (count _start) :dtype :sequence}
+         :content (vec (flatten (reduce conj (mapv #(flow-step % _troot) _start))))
+         }))))
 
 ;; Resource
 
@@ -277,7 +281,7 @@
        ;(process-data-grp proot)
        ;(tu/group-definition  (zx/xml-> proot (tu/pref :dataStoreReference))
        ;                      :store (comp tu/tagblock zip/node))
-       #_(process-flow proot)
+       (process-flow proot)
        (zip/node *nodes*)
        ])))
 
@@ -292,13 +296,25 @@
                                     (tu/pref :ExtendedAttribute))
                           :attribute
                           (comp tu/map2lckws
-                                #(tu/tagblock % :attribute) zip/node))]
-    ))
+                                #(tu/tagblock % :attribute) zip/node))]))
+
+(defn- item
+  "Parse DataFields and Artifact:DataObjects to items"
+  [loc]
+  (let [_datao (zx/xml-> loc (tu/pref :Artifacts) (tu/pref :Artifact)
+                         (zx/attr= :ArtifactType "DataObject")
+                         (tu/pref :DataObject) zip/node)
+        _dataf (zx/xml-> loc (tu/pref :DataFields) (tu/pref :DataField)
+                         zip/node)]
+    {:tag :group :attrs {:count (+ (count _datao)(count _dataf)) :dtype :item}
+     :content (vec (flatten (conj (map #(tu/tagblockmap % {:dtype (:tag %)} :item) _datao)
+                            (map #(with-data % :item) _dataf))))}))
 
 (defn- process-context
   "Parse and populate XPDL context and processes."
   []
   [(resources tu/*zip*)
+   (tu/map2lckws (item tu/*zip*))
    (tu/group-definition
     (zx/xml-> tu/*zip* (tu/pref :Applications) (tu/pref :Application))
     :interface interface)
@@ -308,10 +324,6 @@
    (tu/group-definition
     (zx/xml-> tu/*zip* (tu/pref :Stores) (tu/pref :Store))
     :store (comp tu/map2lckws tu/tagblock zip/node))
-   (tu/group-definition
-    (zx/xml-> tu/*zip* (tu/pref :DataFields) (tu/pref :DataField))
-    :item
-    (comp tu/map2lckws #(with-data % :item)))
    (tu/group-definition
     (zx/xml-> tu/*zip* (tu/pref :WorkflowProcesses) (tu/pref :WorkflowProcess))
     :process process-def)

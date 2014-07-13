@@ -25,6 +25,7 @@ The latest makes a significant change from previous data models. I've opted to a
 2. Straight forward zippers
 3. Use of data.zip.xml selector filtering
 
+While there is a good degree of parity with BPMN, it is not complete and the XPDL code is still coyote ugly.
 
 Assuming you've cloned and installed tributary:
 
@@ -57,7 +58,7 @@ ___Parse source and generate a context___
                  :resource-paths ["dev/resources"]}}
 ````
 
-### Description (BPMN) 0.1.4-SNAPSHOT
+### Description (XPDL) 0.1.4-SNAPSHOT
 
 The data model has changed significantly back in 0.1.2 from the ad-hoc map model I was creating to the standard XML structure to take advantage of build-in zippers and other utilities. The following descripes the mapping and support for XPDL for this project version:
 
