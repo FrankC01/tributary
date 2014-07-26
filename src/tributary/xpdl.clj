@@ -41,12 +41,18 @@
 
 (defn- transition
   [loc]
-  (assoc (update-in  (tu/tagblock (zip/node (zip/down loc))
-               ((comp tu/kwtolckw tu/nskw2kw :tag zip/node zip/down) loc))
-                     [:attrs] set/rename-keys {:Type :dtype})
+  (assoc (update-in
+          (tu/tagblockmap (zip/node loc)
+                          {:dtype
+                           ((comp tu/kwtolckw tu/nskw2kw :tag zip/node) loc)}
+                          :transition)
+          [:attrs] set/rename-keys {:Type :transition-type})
     :content (mapv (comp :Id :attrs)
-              (zx/xml-> loc zip/down (tu/pref :TransitionRefs) zip/children))
-  ))
+                   (zx/xml-> loc tz/children
+                             (tu/pref :TransitionRefs) (tu/pref :TransitionRef)
+                             zip/node)
+                   )))
+
 
 (defn- activity
   [bloc tag & [atmap]]
@@ -55,7 +61,7 @@
     :content
     [(tu/group-definition
       (zx/xml-> bloc (tu/pref :TransitionRestrictions)
-                (tu/pref :TransitionRestriction))
+                (tu/pref :TransitionRestriction) tz/children)
       :transition transition)]))
 
 
@@ -310,6 +316,15 @@
      :content (vec (flatten (conj (map #(tu/tagblockmap % {:dtype (:tag %)} :item) _datao)
                             (map #(with-data % :item) _dataf))))}))
 
+(defn- message
+  "Parse MessageFlow to message"
+  [loc]
+  (let [_msgid (zx/xml1-> loc (tu/pref :Message) (zx/attr :Id))
+        _objid (zx/xml1-> loc (tu/pref :Object) (zx/attr :Id))
+        _base  (tu/tagblockmap (zip/node loc) {:message-id _msgid
+                                               :object-id _objid}  :message)]
+    (tu/map2lckws _base)))
+
 (defn- process-context
   "Parse and populate XPDL context and processes."
   []
@@ -320,7 +335,7 @@
     :interface interface)
    (tu/group-definition
     (zx/xml-> tu/*zip* (tu/pref :MessageFlows) (tu/pref :MessageFlow))
-    :message (comp tu/map2lckws #(tu/tagblock % :message) zip/node))
+    :message message)
    (tu/group-definition
     (zx/xml-> tu/*zip* (tu/pref :Stores) (tu/pref :Store))
     :store (comp tu/map2lckws tu/tagblock zip/node))

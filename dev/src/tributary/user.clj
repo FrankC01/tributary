@@ -10,6 +10,14 @@
    ))
 
 
+;;   (time (def xpdl (context-from-source (-> "Sample Messages.xpdl"
+;;                clojure.java.io/resource
+;;                clojure.java.io/file))))
+
+
+;;   (def xzip (zip/xml-zip xpdl))
+;;   (time (tz/pretty-summary xzip :ppred #(contains? #{:process :context}
+;;                                         (:tag (zip/node %)))))
 
 ;--------------------------------------------
 (comment
